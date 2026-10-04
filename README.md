@@ -23,14 +23,24 @@ The exact command, its output and the before/after state are always one tap away
 
 <table>
   <tr>
-    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" alt="App details and permissions" width="100%"></td>
-    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" alt="Autostart and boot receivers" width="100%"></td>
-    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" alt="Notification access" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" alt="App list with filters" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" alt="App details and permissions" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" alt="AppOps with uid and package scope" width="100%"></td>
   </tr>
   <tr>
-    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.png" alt="Network block applied" width="100%"></td>
-    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.png" alt="Shared uid warning" width="100%"></td>
-    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" alt="Background data read-back" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.png" alt="Autostart and notifications" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.png" alt="Network block and APK extract" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" alt="Debloat presets" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/7.png" alt="Debloat review" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/8.png" alt="Snapshots" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/9.png" alt="Pinned packages" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/10.png" alt="Installer" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/11.png" alt="Self-check" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/12.png" alt="Console" width="100%"></td>
   </tr>
 </table>
 
