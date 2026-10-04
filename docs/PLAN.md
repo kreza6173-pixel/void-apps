@@ -1,6 +1,6 @@
 # VOID // APPS: roadmap and remaining work
 
-Updated: 2026-10-04. See `docs/HANDOFF.md` for the narrative and evidence, and `docs/ROOT_FUTURE.md` for root features kept for later.
+Updated: 2026-10-05. See `docs/HANDOFF.md` for the narrative and evidence, and `docs/ROOT_FUTURE.md` for root features kept for later.
 
 ## Product goal
 
@@ -15,6 +15,8 @@ A safe, reversible, local Android package manager built with Kotlin, Compose, an
 - Debloat track: knowledge base, SAFE-only presets, review screen, compact disclaimer, search in preset list and package list, cross-manager restore via `pm install-existing`, one snapshot per batch, sequential read-back. CI and phone acceptance passed.
 - A4 permissions and AppOps. Phone-verified on the reference phone (see HANDOFF).
 - A7 per-app network block (Chain 3) and background data (netpolicy). Phone-verified on user, system and protected apps (see HANDOFF).
+- A8 installer (APK / APKS / XAPK, OBB, Inspect, extract) and cleaner (cache, empty folders, running apps). Phone-verified by the owner.
+- 1.0.0 release files: README, CHANGELOG, fastlane metadata, store images, F-Droid metadata draft, release guide.
 
 ## A5 autostart: partly done, one open item
 
@@ -54,7 +56,7 @@ _Left open on purpose by the owner. Pick this up later._
 
 Ported from `kreza6173-pixel/VOID-WALL`, per-app, no root. Block, unblock, background restrict and allow were all APPLIED on the phone, with read-back from `cmd connectivity get-package-networking-enabled` (output format confirmed: the card shows "read from connectivity"). A blocked browser really lost DNS. Shared uids show the warning, protected and system-uid apps show no buttons. Reboot persistence of Chain 3 rules is still worth a look later, but the owner accepted the section.
 
-## A8 installer + cleaner: implemented, waiting for the phone test
+## A8 installer + cleaner: done
 
 One new home screen, **Install & clean**, with three tabs, plus an **Extract APK** card in app details.
 
@@ -68,9 +70,11 @@ One new home screen, **Install & clean**, with three tabs, plus an **Extract APK
 
 ## Then
 
-| Step | Source module | Commands to port |
+| Step | Where | What |
 |---|---|---|
-| 1.0 release | this repository | README, About, icon, fastlane, signed release, final smoke test, merge to `main` |
+| 1.0 release, owner steps | GitHub | add the four signing secrets, merge PR `native-app-v0` into `main`, tag and release `v1.0.0`, set the social preview (see `docs/RELEASE.md`) |
+| F-Droid | gitlab.com/fdroid/fdroiddata | merge request with `docs/fdroid/io.github.kreza6173pixel.voidapps.yml` |
+| In-app About screen | this repository | not built yet; README covers it for 1.0 |
 | Root track (future, owner decides) | see `docs/ROOT_FUTURE.md` | firewall chains, app data backup, private cache cleanup |
 
 ## Gates
