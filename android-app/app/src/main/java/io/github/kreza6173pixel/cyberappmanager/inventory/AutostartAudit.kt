@@ -9,14 +9,22 @@ data class AutostartAudit(
     val packageName: String,
     val receivers: List<BootReceiver>,
     val backgroundOps: List<BackgroundOpState>,
+    val disabledComponents: Set<String> = emptySet(),
     val raw: String = "",
 )
 
-/**
- * Component name at line start, with an optional dumpsys hex hash prefix.
- * Accepts both shorthand (`pkg/.Cls`) and fully qualified (`pkg/full.Cls`) forms.
- * Ends on `:`, whitespace, or end of string.
- */
+/** Result of a pm disable/enable component operation with read-back. */
+data class ComponentChangeResult(
+    val pkg: String,
+    val component: String,
+    val enable: Boolean,
+    val verdict: Verdict,
+    val command: String,
+    val output: String,
+    val wasBefore: Boolean,
+    val isAfter: Boolean?,
+)
+
 private val COMPONENT = Regex(
     "^(?:[0-9a-f]+\\s+)?([A-Za-z][A-Za-z0-9_.]*/[A-Za-z.][A-Za-z0-9_.\$]*)(?=$|[:\\s])"
 )
@@ -30,21 +38,6 @@ private val OP = Regex(
     RegexOption.IGNORE_CASE,
 )
 
-/**
- * Best-effort parser for `dumpsys package <pkg>` output.
- *
- * Boot receivers are only matched inside the Receiver Resolver Table.
- * The parser starts permissive (`inReceiverTable = true`) so single-line
- * or partial output still works, but any non-receiver boundary marker
- * (Activity/Service/Provider Resolver Table, Permissions, Packages, etc.)
- * resets it until the next `Receiver Resolver Table:` header.
- *
- * `component` and `action` are tracked independently and paired when both
- * are found. This handles all three real-device formats:
- *   1. `pkg/.Cls: ACTION`           (component + action on one line)
- *   2. `pkg/.Cls:\n  ACTION`        (component then action on next line)
- *   3. `ACTION:\n  hex pkg/.Cls`    (action header then component below)
- */
 fun parseAutostartAudit(packageName: String, text: String): AutostartAudit {
     val receivers = linkedSetOf<BootReceiver>()
     var inReceiverTable = true
@@ -54,7 +47,6 @@ fun parseAutostartAudit(packageName: String, text: String): AutostartAudit {
     for (line in text.lineSequence()) {
         val trimmed = line.trim()
 
-        /* Section boundaries. */
         when {
             trimmed == "Receiver Resolver Table:" -> {
                 inReceiverTable = true
@@ -75,9 +67,7 @@ fun parseAutostartAudit(packageName: String, text: String): AutostartAudit {
 
         if (!inReceiverTable) continue
 
-        /* Try to extract a component and/or a boot action from this line. */
         COMPONENT.find(trimmed)?.let {
-            /* A new component resets both: each filter is independent. */
             component = it.groupValues[1]
             action = null
         }
@@ -86,7 +76,6 @@ fun parseAutostartAudit(packageName: String, text: String): AutostartAudit {
             action = it.groupValues[1]
         }
 
-        /* Pair them as soon as both are available. */
         if (component != null && action != null) {
             val c = component!!
             if (c.substringBefore('/') == packageName) {
@@ -97,7 +86,6 @@ fun parseAutostartAudit(packageName: String, text: String): AutostartAudit {
         }
     }
 
-    /* Background ops are extracted from the full text, not just the receiver table. */
     val ops = OP.findAll(text)
         .map {
             BackgroundOpState(
@@ -108,7 +96,46 @@ fun parseAutostartAudit(packageName: String, text: String): AutostartAudit {
         .distinctBy { it.op }
         .toList()
 
-    return AutostartAudit(packageName, receivers.toList(), ops, text)
+    val disabled = parseDisabledComponents(packageName, text)
+
+    return AutostartAudit(packageName, receivers.toList(), ops, disabled, text)
+}
+
+/**
+ * Extracts the set of disabled component names from `dumpsys package` output.
+ * In the Packages section, disabled components are listed under `disabledComponents:`.
+ */
+fun parseDisabledComponents(packageName: String, text: String): Set<String> {
+    val disabled = mutableSetOf<String>()
+    var inSection = false
+    for (line in text.lineSequence()) {
+        val trimmed = line.trim()
+        when {
+            trimmed == "disabledComponents:" -> inSection = true
+            inSection && (trimmed == "enabledComponents:" || trimmed.isEmpty() ||
+                trimmed.endsWith(":") && !trimmed.startsWith(packageName) && !trimmed.startsWith(".")) -> {
+                inSection = false
+            }
+            inSection && trimmed.isNotEmpty() -> {
+                val cls = trimmed.trim()
+                val full = if (cls.startsWith(".")) "$packageName/$cls" else if ('/' in cls) cls else "$packageName/$cls"
+                disabled.add(full)
+            }
+        }
+    }
+    return disabled
+}
+
+/**
+ * Checks whether a component name appears in the disabled set.
+ * Handles both shorthand and fully qualified forms.
+ */
+fun isComponentDisabled(component: String, disabledComponents: Set<String>): Boolean {
+    if (component in disabledComponents) return true
+    val cls = component.substringAfter('/')
+    val pkg = component.substringBefore('/')
+    return "$pkg/$cls" in disabledComponents || cls in disabledComponents ||
+        (cls.startsWith(".") && "$pkg$cls" in disabledComponents)
 }
 
 /** Validates a `package/class` component name for use in pm disable/enable commands. */

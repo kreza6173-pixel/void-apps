@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="autostart_title">Autostart / boot</string>
-    <string name="autostart_loading">Reading autostart state…</string>
+    <string name="autostart_loading">Reading autostart state\u2026</string>
     <string name="autostart_error">Autostart audit unavailable: %1$s</string>
-    <string name="autostart_read_only">Read-only audit. No component or background setting was changed. Component control will be available after phone verification.</string>
+    <string name="autostart_note">Boot receivers start this app at boot. Disabling a receiver prevents it. The change is read back from Android. Background execution (RUN_IN_BACKGROUND) is managed in AppOps above.</string>
     <string name="autostart_no_receivers">No boot receiver found in the exposed package dump.</string>
     <string name="autostart_background_title">Background execution</string>
     <string name="autostart_raw_show">Show raw dumpsys output</string>
     <string name="autostart_raw_hide">Hide raw output</string>
+    <string name="autostart_disable">Disable</string>
+    <string name="autostart_enable">Enable</string>
+    <string name="autostart_disable_title">Disable boot receiver?</string>
+    <string name="autostart_enable_title">Enable boot receiver?</string>
+    <string name="autostart_disable_body">%1$s will be disabled. The app will no longer start at boot through this receiver. The change is read back from Android.</string>
+    <string name="autostart_enable_body">%1$s will be re-enabled. The app can start at boot through this receiver again. The change is read back from Android.</string>
+    <string name="autostart_silently_kept">Android returned success but kept the previous state. The system silently ignored this change.</string>
 </resources>

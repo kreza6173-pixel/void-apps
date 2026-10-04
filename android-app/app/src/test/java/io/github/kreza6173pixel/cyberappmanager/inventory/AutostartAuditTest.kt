@@ -18,18 +18,12 @@ class AutostartAuditTest {
         val audit = parseAutostartAudit("com.example.app", text)
         assertEquals(1, audit.receivers.size)
         assertEquals("BOOT_COMPLETED", audit.receivers.single().action)
-        assertEquals(
-            listOf("RUN_IN_BACKGROUND", "RUN_ANY_IN_BACKGROUND"),
-            audit.backgroundOps.map { it.op },
-        )
+        assertEquals(listOf("RUN_IN_BACKGROUND", "RUN_ANY_IN_BACKGROUND"), audit.backgroundOps.map { it.op })
         assertTrue(audit.raw.isNotEmpty())
     }
 
     @Test fun acceptsFullyQualifiedReceiverClass() {
-        val audit = parseAutostartAudit(
-            "com.example.app",
-            "com.example.app/com.example.app.BootReceiver: LOCKED_BOOT_COMPLETED",
-        )
+        val audit = parseAutostartAudit("com.example.app", "com.example.app/com.example.app.BootReceiver: LOCKED_BOOT_COMPLETED")
         assertEquals(1, audit.receivers.size)
         assertEquals("LOCKED_BOOT_COMPLETED", audit.receivers.single().action)
     }
@@ -53,10 +47,7 @@ class AutostartAuditTest {
               com.example.app/androidx.startup.InitializationProvider
         """.trimIndent()
         val audit = parseAutostartAudit("com.example.app", text)
-        assertEquals(
-            listOf("com.example.app/.BootReceiver"),
-            audit.receivers.map { it.component },
-        )
+        assertEquals(listOf("com.example.app/.BootReceiver"), audit.receivers.map { it.component })
     }
 
     @Test fun handlesEmptyInput() {
@@ -109,5 +100,24 @@ class AutostartAuditTest {
         assertFalse(isValidComponentName("noSlash"))
         assertFalse(isValidComponentName("/noPackage"))
         assertFalse(isValidComponentName("pkg/"))
+    }
+
+    @Test fun parsesDisabledComponents() {
+        val text = """
+            Packages:
+              Package [com.example.app]
+                disabledComponents:
+                  com.example.app/.BootReceiver
+                enabledComponents:
+                  com.example.app/.OtherReceiver
+        """.trimIndent()
+        val disabled = parseDisabledComponents("com.example.app", text)
+        assertTrue(isComponentDisabled("com.example.app/.BootReceiver", disabled))
+        assertFalse(isComponentDisabled("com.example.app/.OtherReceiver", disabled))
+    }
+
+    @Test fun disabledComponentsEmptyWhenNoSection() {
+        val disabled = parseDisabledComponents("com.example.app", "no disabled components here")
+        assertTrue(disabled.isEmpty())
     }
 }
