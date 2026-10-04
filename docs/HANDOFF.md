@@ -29,8 +29,8 @@ Implement a whole section (code, tests, wiring, strings) before asking for a pho
 | A3 snapshots, undo, pins, batch | done | Phone-verified |
 | Debloat | done | CI green and phone acceptance |
 | A4 permissions + AppOps | done on reference phone | Self-check system 311/311 clean; user 463/463; HyperOS ask parsed read-only |
-| A5 autostart | partly done | Audit and fully qualified component round trip phone-verified; shorthand receivers OPEN (see below) |
-| A6 notifications | implemented, awaiting phone test | Mute via POST_NOTIFICATIONS, listener and DND access with settings read-back |
+| A5 autostart | partly done | Audit and fully qualified component round trip phone-verified; shorthand receivers OPEN |
+| A6 notifications | partly done | Mute phone-verified; DND access NOT_APPLIED on HyperOS and left open |
 | A7 to A8 | open | |
 | 1.0 release | open | |
 
@@ -42,24 +42,31 @@ Implement a whole section (code, tests, wiring, strings) before asking for a pho
 - Package-scope AppOps changes work only when no non-default uid mode overrides them. Uid-scope changes are disabled after the ROM silently kept CAMERA and CALL_PHONE changes.
 - `MIUIOP(n)` is read-only. HyperOS `MIUIOP(10017): ask` is now a recognised read-only mode.
 - Self-check system group: 311/311, no permission errors, cap hits, AppOps errors, unsplit output or unknown lines.
-- A5: boot receivers listed correctly on `com.thirtytwo.steps` and `ch.abertschi.adfree`; app without receivers shows the empty state; RUN_ANY_IN_BACKGROUND shown.
-- A5: `pm disable` / `pm enable` on `com.thirtytwo.steps/androidx.profileinstaller.ProfileInstallReceiver` APPLIED both ways with read-back.
-- A5 finding: HyperOS prints `new state: disabled` (exit 0) for shorthand `pkg/.Cls` too; the command must use the fully qualified class (`expandComponentName`).
+- A5: boot receivers listed correctly; fully qualified receiver disable/enable round trip APPLIED.
+- A6: POST_NOTIFICATIONS mute and restore were phone-tested; permissions card read-back showed not granted then granted.
+- A6: DND allow returned exit 0 but read-back remained not granted. The UI correctly reported NOT_APPLIED and did not claim success.
 
 ## A5 open item (left for later by the owner)
 
 Component control for receivers listed in shorthand form (`pkg/.Cls`) is not reliable in the UI.
 
 - Seen on `com.thirtytwo.steps/.BootReceiver`, `ch.abertschi.adfree/.StartOnBootListener` and `com.eyalm.adns/.services.BootReceiver`.
-- Strongest evidence (`com.eyalm.adns`): Disable `.services.BootReceiver` returned APPLIED (before enabled, after disabled, command used `com.eyalm.adns/com.eyalm.adns.services.BootReceiver`). A second tap returned "component is already disabled". The row still showed enabled with a Disable button. So the device and the repository agree; only the card's state check is wrong.
-- The repository read-back now says these are disabled ("component is already disabled"), but the card still shows them enabled with a Disable button, so Enable is never offered.
-- Probable cause: the card's `isComponentDisabled(...)` compares the shorthand name against fully qualified entries. Fix idea: normalise both sides with `expandComponentName()` before comparing, and add a unit test with a shorthand receiver plus a fully qualified disabled entry.
-- Both components above are still disabled on the reference phone. Restore with `pm enable com.thirtytwo.steps/com.thirtytwo.steps.BootReceiver`, `pm enable ch.abertschi.adfree/ch.abertschi.adfree.StartOnBootListener` and `pm enable com.eyalm.adns/com.eyalm.adns.services.BootReceiver` from the console. `com.eyalm.adns/androidx.profileinstaller.ProfileInstallReceiver` may also still be disabled.
+- The repository and device agree those components are disabled, but the card still shows Disable. Probable cause: shorthand versus fully qualified comparison.
+- Both components above are still disabled on the reference phone. Restore with fully qualified `pm enable` commands from the console if needed.
+
+## A6 open item (left for later by the owner)
+
+DND access control on HyperOS is not reliable and is intentionally left open.
+
+- On `com.thirtytwo.steps`, `cmd notification allow_dnd 'com.thirtytwo.steps'` returned exit 0 with no output.
+- Read-back from `enabled_notification_policy_access_packages` stayed unchanged: before not granted, after not granted.
+- This is treated as **NOT_APPLIED**, not success. Possible future path: inspect `dumpsys notification` and test the ROM-specific AppOps/policy mechanism.
+- Per-app mute works and was phone-verified. The tested app had no notification listener service, so there was no listener toggle to test there.
 
 ## Remaining work
 
-1. A5 open item above (optional, owner decides when).
-2. A6 phone test: mute/unmute, listener allow/revoke, DND allow/revoke (see PLAN).
+1. A5 shorthand receiver UI state (optional, owner decides when).
+2. A6 DND access on HyperOS (optional, owner decides when).
 3. A7 Chain3/netpolicy based on `VOID-WALL`.
 4. A8 streamed APK/APKS/XAPK installer based on `pulse-install`; APKM stays out of scope.
 5. 1.0 README, About, icon, fastlane, signed release, smoke test and merge to `main`.
@@ -77,11 +84,9 @@ AppOps is separate from runtime permissions. OEM operations are shown but never 
 - `ba860ea`: Self-check, ROM report template and system-uid refusal.
 - `d8f885a`: HyperOS `ask` mode read-only.
 - `54b9703`: permission-section extractor; system Self-check 311/311 clean.
-- `077746ab`: A5/A6 source-module evidence. Last owner-verified commit before the A5 work (CI #71).
-- `0615a610` to `0c93159`: first A5 attempt; CI #72 to #85 alternated red/green on the receiver parser. Superseded.
-- `07ccf3b`: A5 read-only audit rebuilt clean; CI green.
-- `84ad3c9`: A5 component Disable/Enable with read-back.
-- `91082cb`: fully qualified class names for `pm disable/enable`.
-- `a070171`, `eed9ff5`, `f82f0fb`: read-back attempts for disabledComponents; fully qualified round trip works, shorthand UI state still open.
+- `077746ab`: last owner-verified commit before A5 work (CI #71).
+- `07ccf3b`: A5 read-only audit rebuilt clean.
+- `84ad3c9`, `91082cb`, `a070171`, `eed9ff5`, `f82f0fb`: A5 component control and read-back attempts; shorthand UI state left open.
 - `f3c8266`: A5 status recorded, shorthand item left open.
-- `21f03bb`: A6 notification card (mute, listener access, DND access) with read-back and 10 unit tests.
+- `21f03bb`: A6 notification card with mute, listener access, DND access and 10 unit tests.
+- `b0350d5`: previous docs update.

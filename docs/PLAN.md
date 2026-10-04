@@ -30,18 +30,24 @@ _Left open on purpose by the owner. Pick this up later._
 - Symptom: `.BootReceiver` / `.StartOnBootListener` rows keep showing **Disable** while the repository reports "component is already disabled". The card and the repository disagree.
 - Seen on three apps. On `com.eyalm.adns/.services.BootReceiver` the repository returned APPLIED for Disable, then "already disabled", while the row stayed on Disable: the device state is right, the card check is wrong.
 - Most likely cause: the card checks state with `isComponentDisabled(receiver.component, set)` using the shorthand name, while the set built by `queryDisabledComponents` holds fully qualified `pkg/pkg.Cls` names. Normalising both sides with `expandComponentName()` should make them agree.
-- Device state to remember: `com.thirtytwo.steps/com.thirtytwo.steps.BootReceiver` and `ch.abertschi.adfree/ch.abertschi.adfree.StartOnBootListener` and `com.eyalm.adns/com.eyalm.adns.services.BootReceiver` were really disabled during testing. Re-enable from the console with `pm enable <pkg>/<full.Cls>` if needed.
+- Device state to remember: `com.thirtytwo.steps/com.thirtytwo.steps.BootReceiver`, `ch.abertschi.adfree/ch.abertschi.adfree.StartOnBootListener`, and `com.eyalm.adns/com.eyalm.adns.services.BootReceiver` were really disabled during testing. Re-enable from the console with `pm enable <pkg>/<full.Cls>` if needed.
 - Acceptance when fixed: Disable then Enable on `.BootReceiver` both APPLIED, and the row button flips each time.
 
-## A6 notifications: implemented, awaiting phone test
+## A6 notifications: partly done, one open item
 
-Built from `kreza6173-pixel/void-pulse`, per-app only (global DND mode stays out of a package manager). New card in App details, below Autostart.
+Implemented from `kreza6173-pixel/void-pulse`, per-app only:
 
-- Posting notifications (mute): the POST_NOTIFICATIONS runtime permission, changed through the A4 `setPermission` path with its read-back. Apps that do not request it show "not applicable".
-- Listener access: services from `pm query-services --user 0 --components -a android.service.notification.NotificationListenerService` (dumpsys grep fallback), state from `settings get secure enabled_notification_listeners`, change with `cmd notification allow_listener|disallow_listener <pkg/full.Cls>`.
-- DND access: state from `settings get secure enabled_notification_policy_access_packages`, change with `cmd notification allow_dnd|disallow_dnd <pkg>`. Allow is offered only when the app requests ACCESS_NOTIFICATION_POLICY.
-- Every component comparison is normalised (A5 lesson). Unreadable settings show "unknown" and disable changes instead of guessing "not granted". Protected packages are refused in the repository.
-- Not yet measured on the phone: whether HyperOS keeps the two secure settings in sync after `cmd notification` changes. If read-back says NOT_APPLIED with exit 0, the next step is reading `dumpsys notification` instead.
+- Posting notifications (mute): POST_NOTIFICATIONS through the A4 permission path; phone-tested and working. Allow/Revoke read-back matches Android.
+- Listener section: apps with no listener service correctly show the empty state. Listener allow/revoke remains available for apps that declare one.
+- DND access: `cmd notification allow_dnd/disallow_dnd` returns exit 0 on HyperOS but the secure setting does not change. The UI correctly reports **NOT_APPLIED** and warns that Android silently ignored it.
+
+### OPEN: DND access control on HyperOS
+
+_Left open on purpose by the owner. Pick this up later._
+
+- Evidence: `cmd notification allow_dnd 'com.thirtytwo.steps'` returned exit 0, but `enabled_notification_policy_access_packages` remained unchanged (`before: not granted`, `after: not granted`).
+- Do not claim DND access was granted when read-back disagrees.
+- Possible future investigation: read `dumpsys notification` and test the HyperOS-specific AppOps/policy path. No automatic fallback is trusted yet.
 
 ## Then
 
