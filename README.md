@@ -101,7 +101,7 @@ JDK 17, Android SDK 36, Gradle 8.13. CI (`.github/workflows/ci.yml`) runs unit t
 
 ## How it was built
 
-The repository started on 2026-08-26 as **Cyber App Manager**, a WebUI module for Shevery (the shell scripts and `webui/` at the repository root are that module, kept for history). The native app was built on the branch `native-app-v0` between **2026-10-02 and 2026-10-05**: 127 commits up to the A8 docs, plus the release commits, 106 of them native-only. Every section was tested on the reference phone as one unit before the next one started. The commit history is left as it happened, including mistakes.
+The repository started on 2026-08-26 as **Cyber App Manager**, a WebUI module for Shevery. That module was removed from the tree before 1.0.0 and only remains in the git history. The native app was built on the branch `native-app-v0` between **2026-10-02 and 2026-10-05**: 127 commits up to the A8 docs, plus the release commits, 106 of them native-only. Every section was tested on the reference phone as one unit before the next one started. The commit history is left as it happened, including mistakes.
 
 | Phase | Commits | What was hard |
 |---|---|---|

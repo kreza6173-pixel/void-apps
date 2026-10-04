@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "cyber-app-manager"
+rootProject.name = "void-apps"
 include(":app")
