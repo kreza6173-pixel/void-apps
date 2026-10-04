@@ -97,7 +97,7 @@ Sources: `pulse-install` (`webui/script.js`, `service.sh`) and `void-purge` (`we
 - `docs/images/social-preview.png` (GitHub social preview) and `docs/images/profile-banner.png`.
 - `docs/fdroid/io.github.kreza6173pixel.voidapps.yml`: draft for fdroiddata, builds `subdir: android-app/app` from tag `v1.0.0`.
 - `docs/RELEASE.md`: signing secrets (same names as PULSE // BATTERY), merge, tag, F-Droid.
-- The old Shevery WebUI module files stay at the repository root for history; F-Droid builds only `android-app/app`.
+- The old Shevery WebUI module (Cyber App Manager: root `*.sh`, `module.prop`, `webui/`) and the duplicate `docs/ci.yml` were removed from the tree before release; they remain in git history. F-Droid builds only `android-app/app`.
 
 ## Safety decisions
 
@@ -122,4 +122,5 @@ AppOps is separate from runtime permissions. OEM operations are shown but never 
 - `8d28882`: A7 docs and `docs/ROOT_FUTURE.md`.
 - `e6bd37c`, `de0efab`, `3d3c9d1`: A8 installer + cleaner, Install & clean screen, Extract card, 11 unit tests.
 - `ec0a966`: A8 docs.
-- `0d9f6df` 1.0.0 release files (README, CHANGELOG, fastlane text, F-Droid draft, docs/RELEASE.md, versionCode 100 / 1.0.0); then this docs commit. Binary images (icon, featureGraphic, phoneScreenshots 1-6, docs/images banners) are uploaded by the owner via GitHub web.
+- `0d9f6df` 1.0.0 release files (README, CHANGELOG, fastlane text, F-Droid draft, docs/RELEASE.md, versionCode 100 / 1.0.0); then this docs commit. Binary images (icon, featureGraphic, phoneScreenshots, docs/images banners) are uploaded by the owner via GitHub web.
+- `ff81867` to `2592350`: pre-release cleanup, old WebUI module, duplicate `docs/ci.yml` and a stray test outside the app module removed; Gradle root project renamed to `void-apps`.
