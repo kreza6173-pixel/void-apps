@@ -24,11 +24,11 @@ import io.github.kreza6173pixel.cyberappmanager.shizuku.ShizukuState
 import io.github.kreza6173pixel.cyberappmanager.shizuku.ShizukuUidKind
 
 @Composable
-fun HomeScreen(runtime: ShizukuRuntime, modifier: Modifier = Modifier, onOpenApps: () -> Unit = {}, onOpenConsole: () -> Unit = {}, onOpenSnapshots: () -> Unit = {}, onOpenPins: () -> Unit = {}, onOpenDebloat: () -> Unit = {}, onOpenSelfCheck: () -> Unit = {}) {
+fun HomeScreen(runtime: ShizukuRuntime, modifier: Modifier = Modifier, onOpenApps: () -> Unit = {}, onOpenConsole: () -> Unit = {}, onOpenSnapshots: () -> Unit = {}, onOpenPins: () -> Unit = {}, onOpenDebloat: () -> Unit = {}, onOpenSelfCheck: () -> Unit = {}, onOpenTools: () -> Unit = {}) {
     val state = runtime.state
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         StateCard(runtime); StateAction(runtime, state); UidRow(runtime)
-        if (state == ShizukuState.READY) { FeatureButton(R.string.home_open_apps, onOpenApps); FeatureButton(R.string.home_open_debloat, onOpenDebloat); FeatureButton(R.string.home_open_snapshots, onOpenSnapshots); FeatureButton(R.string.home_open_pins, onOpenPins); FeatureButton(R.string.home_open_selfcheck, onOpenSelfCheck); FeatureButton(R.string.home_open_console, onOpenConsole) }
+        if (state == ShizukuState.READY) { FeatureButton(R.string.home_open_apps, onOpenApps); FeatureButton(R.string.home_open_tools, onOpenTools); FeatureButton(R.string.home_open_debloat, onOpenDebloat); FeatureButton(R.string.home_open_snapshots, onOpenSnapshots); FeatureButton(R.string.home_open_pins, onOpenPins); FeatureButton(R.string.home_open_selfcheck, onOpenSelfCheck); FeatureButton(R.string.home_open_console, onOpenConsole) }
         RefreshButton(runtime)
     }
 }
