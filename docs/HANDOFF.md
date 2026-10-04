@@ -31,8 +31,8 @@ Implement a whole section (code, tests, wiring, strings) before asking for a pho
 | A4 permissions + AppOps | done on reference phone | Self-check system 311/311 clean; user 463/463; HyperOS ask parsed read-only |
 | A5 autostart | partly done | Audit and fully qualified component round trip phone-verified; shorthand receivers OPEN |
 | A6 notifications | partly done | Mute phone-verified; DND access NOT_APPLIED on HyperOS and left open |
-| A7 network | implemented, phone test pending | Chain 3 block and netpolicy background data with read-back; 10 unit tests |
-| A8 installer | open | |
+| A7 network | done | Block/unblock and background restrict/allow APPLIED on user, system and protected apps |
+| A8 installer + cleaner | implemented, phone test pending | pulse-install (no APKM) and three void-purge features; 11 unit tests |
 | 1.0 release | open | |
 | Root track | future only | Catalog in `docs/ROOT_FUTURE.md` |
 
@@ -47,6 +47,7 @@ Implement a whole section (code, tests, wiring, strings) before asking for a pho
 - A5: boot receivers listed correctly; fully qualified receiver disable/enable round trip APPLIED.
 - A6: POST_NOTIFICATIONS mute and restore were phone-tested; permissions card read-back showed not granted then granted.
 - A6: DND allow returned exit 0 but read-back remained not granted. The UI correctly reported NOT_APPLIED and did not claim success.
+- A7: `com.google.android.apps.docs` Block APPLIED ("Disabled networking for ..., appId 10176"); Brave blocked and really lost DNS; background data Allow APPLIED on uids 10449 and 14569; Chain 3 read back as on; shared uid 10093 (downloads provider, MTP, sound picker) shown with the warning and no buttons.
 
 ## A5 open item (left for later by the owner)
 
@@ -65,24 +66,28 @@ DND access control on HyperOS is not reliable and is intentionally left open.
 - This is treated as **NOT_APPLIED**, not success. Possible future path: inspect `dumpsys notification` and test the ROM-specific AppOps/policy mechanism, or a uid 0 retry (see `docs/ROOT_FUTURE.md`).
 - Per-app mute works and was phone-verified. The tested app had no notification listener service, so there was no listener toggle to test there.
 
-## A7 network (implemented, phone test pending)
+## A7 network (done)
 
-Source: `VOID-WALL` `webui/wall.js`; the owner confirmed every command there worked on his phone.
+Source: `VOID-WALL` `webui/wall.js`. Files: `inventory/NetworkAccess.kt`, `inventory/NetworkRepository.kt`, `ui/apps/NetworkAccessCard.kt`, `res/values/strings_network.xml`, `NetworkAccessTest.kt`. Block uses Chain 3 (`set-chain3-enabled true` once, then `set-package-networking-enabled`), read back with `get-package-networking-enabled`; background data uses `netpolicy restrict-background-blacklist`. All phone-verified, see the acceptance record.
 
-- Files: `inventory/NetworkAccess.kt` (parsers), `inventory/NetworkRepository.kt` (audit, block, background data), `ui/apps/NetworkAccessCard.kt`, `res/values/strings_network.xml`, `test/.../NetworkAccessTest.kt`, wiring and two confirm dialogs in `AppDetailScreen.kt`.
-- Block: `cmd connectivity set-chain3-enabled true` (only if Chain 3 is not already on), then `cmd connectivity set-package-networking-enabled false <pkg>`. Unblock sends `true`. VOID-WALL kept its own list file because it had no read-back; this app reads Android instead: `get-package-networking-enabled`, falling back to `dumpsys connectivity trafficcontroller`.
-- Background data: `cmd netpolicy add|remove restrict-background-blacklist <uid>`, read back from the list command.
-- Refused in the repository: invalid names, protected packages, uids below 10000, SDK below 30 for Chain 3.
-- Parsers are tolerant on purpose (help text, errors and long output give "unknown", never a guessed state), because the `get-*` output format has not been seen on the phone yet.
+## A8 installer + cleaner (implemented, phone test pending)
+
+Sources: `pulse-install` (`webui/script.js`, `service.sh`) and `void-purge` (`webui/index.html`); the owner says every command there worked on his phone.
+
+- Files: `install/InstallLogic.kt` (pure parsers and rules), `install/Axml.kt` (binary manifest reader), `install/InstallerRepository.kt` (browse, inspect, install, auto folder, extract), `install/CleanerRepository.kt` (cache, empty folders, running apps), `ui/tools/ToolsScreen.kt`, `ui/apps/ExtractCard.kt`, `res/values/strings_tools.xml`, `test/.../install/InstallLogicTest.kt`; wiring in `MainActivity.kt`, `HomeScreen.kt`, `AppDetailScreen.kt`.
+- The manifest is read with `unzip -p <apk> AndroidManifest.xml | gzip -c | base64` (plain base64 fallback) so large manifests stay under the 64 KiB cap.
+- Work directory for bundles: `/data/local/tmp/.void-install-work/`, always removed afterwards.
+- Installs are refused only for the static core list (framework, System UI, Shizuku, installers...). Updating Shizuku through Shizuku would cut the session mid-install.
+- Running apps bug in void-purge: it never listed processes; it force-stopped every `pm list packages -3` package inside `( ... ) >/dev/null 2>&1 &`, so the result was invisible and the bridge could end the background children. Rebuilt on `ps` with per-package read-back.
+- Kept out: APKM, VirusTotal, AI assistant, void-purge orphans / logs / duplicates / root tools.
 
 ## Remaining work
 
-1. A7 phone test (next).
+1. A8 phone test (next).
 2. A5 shorthand receiver UI state (optional, owner decides when).
 3. A6 DND access on HyperOS (optional, owner decides when).
-4. A8 streamed APK/APKS/XAPK installer based on `pulse-install`; APKM stays out of scope.
-5. 1.0 README, About, icon, fastlane, signed release, smoke test and merge to `main`.
-6. Root track, only if the owner opens it: `docs/ROOT_FUTURE.md`.
+4. 1.0 README, About, icon, fastlane, signed release, smoke test and merge to `main`.
+5. Root track, only if the owner opens it: `docs/ROOT_FUTURE.md`.
 
 ## Safety decisions
 
@@ -104,4 +109,6 @@ AppOps is separate from runtime permissions. OEM operations are shown but never 
 - `21f03bb`: A6 notification card with mute, listener access, DND access and 10 unit tests.
 - `b0350d5`, `3b89063`: A6 docs and DND open item.
 - `f1d5241`: A7 network card (Chain 3 block, netpolicy background data) and 10 unit tests.
-- next commit: A7 docs and `docs/ROOT_FUTURE.md`.
+- `8d28882`: A7 docs and `docs/ROOT_FUTURE.md`.
+- `e6bd37c`, `de0efab`, `3d3c9d1`: A8 installer + cleaner, Install & clean screen, Extract card, 11 unit tests.
+- next commit: A8 docs.

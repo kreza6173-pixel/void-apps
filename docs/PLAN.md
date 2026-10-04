@@ -14,6 +14,7 @@ A safe, reversible, local Android package manager built with Kotlin, Compose, an
 - A3 snapshots, Restore/Undo, JSON Import/Export, Pins, batch operations. Acceptance test passed on the phone.
 - Debloat track: knowledge base, SAFE-only presets, review screen, compact disclaimer, search in preset list and package list, cross-manager restore via `pm install-existing`, one snapshot per batch, sequential read-back. CI and phone acceptance passed.
 - A4 permissions and AppOps. Phone-verified on the reference phone (see HANDOFF).
+- A7 per-app network block (Chain 3) and background data (netpolicy). Phone-verified on user, system and protected apps (see HANDOFF).
 
 ## A5 autostart: partly done, one open item
 
@@ -49,22 +50,26 @@ _Left open on purpose by the owner. Pick this up later._
 - Do not claim DND access was granted when read-back disagrees.
 - Possible future investigation: read `dumpsys notification` and test the HyperOS-specific AppOps/policy path. A root retry is listed in `docs/ROOT_FUTURE.md`. No automatic fallback is trusted yet.
 
-## A7 network: implemented, waiting for the phone test
+## A7 network: done
 
-Ported from `kreza6173-pixel/VOID-WALL` (`webui/wall.js`), per-app, no root. New "Network access" card in app details.
+Ported from `kreza6173-pixel/VOID-WALL`, per-app, no root. Block, unblock, background restrict and allow were all APPLIED on the phone, with read-back from `cmd connectivity get-package-networking-enabled` (output format confirmed: the card shows "read from connectivity"). A blocked browser really lost DNS. Shared uids show the warning, protected and system-uid apps show no buttons. Reboot persistence of Chain 3 rules is still worth a look later, but the owner accepted the section.
 
-- Full network block (Chain 3, Android 11+): `cmd connectivity set-package-networking-enabled false|true <pkg>`. Chain 3 is switched on with `cmd connectivity set-chain3-enabled true` before the first block (VOID-WALL does this at start); it is never switched off automatically.
-- Block read-back: `cmd connectivity get-package-networking-enabled <pkg>`; fallback `dumpsys connectivity trafficcontroller` (uid row with OEM_DENY_3). A block is APPLIED only when the package reads as blocked **and** Chain 3 reads as on. No readable state means no button.
-- Background data: `cmd netpolicy add|remove restrict-background-blacklist <uid>`, read back from `cmd netpolicy list restrict-background-blacklist` (every uid after the colon is parsed; VOID-WALL only took the first number per line).
-- uid from `pm list packages -U --user 0 <pkg>` with exact match. Shared uids are shown with a warning; uids below 10000 and protected packages are refused in the repository.
-- Data Saver state is shown read-only.
-- Unknown on the phone yet: the exact output format of the `get-*` commands, and whether Chain 3 rules survive a reboot on HyperOS. The raw output section exists to settle both.
+## A8 installer + cleaner: implemented, waiting for the phone test
+
+One new home screen, **Install & clean**, with three tabs, plus an **Extract APK** card in app details.
+
+- Install (from `kreza6173-pixel/pulse-install`): shell-side folder browser (default `/sdcard/Download`), APK / APKS / XAPK selection, Inspect (package, label, version, SDK, ABIs, launcher, permissions, SHA-256, installed version, downgrade warning) with a native AXML reader, options `-r` / `-g` / delete after install, several loose APKs as one split session, auto-install folder `/sdcard/pulse-install/auto` with move to `installed/`, local history. Streaming install exactly like pulse-install: `pm install-create`, `sz=$(stat -c%s f) && cat f | pm install-write -S "$sz" <id> <split> -`, `pm install-commit`, abandon on write error. XAPK `manifest.json` `split_apks`, `universal.apk` first, OBB copy to `/sdcard/Android/obb/<pkg>/` with size check.
+- Install read-back: package read from the APK manifest; `versionCode` / `lastUpdateTime` from `dumpsys package` before and after. APPLIED only when Android said `Success` **and** the installed version or update time changed.
+- Extract: `pm path`, copy to `/sdcard/Download/pulse-extracted/<pkg>_<version>/`, size check per file; optional `.xapk` with generated `manifest.json` when `zip` exists, checked with `unzip -l`.
+- Dropped on purpose: APKM, VirusTotal and the AI assistant (both need INTERNET, which this app does not have).
+- Clean (from `kreza6173-pixel/void-purge`): `pm trim-caches 999999999999` with free space on `/data` measured before and after; empty folders via `find <root> -depth -type d -empty`, removed with `rmdir` only and read back with `[ -e ]`; `/sdcard` itself and system roots are refused.
+- Running (void-purge, fixed): the original force-stopped every third-party package in a background `( ... ) &` with output discarded, so it listed nothing and hid every failure. Now live processes come from `ps -A -o USER,PID,NAME` (fallback `ps -A`), grouped by package; `am force-stop --user 0 <pkg>` one by one in the foreground; `ps` read again after 1.2 s. Protected apps (this app, Shizuku, launcher, keyboard, dialer, SMS, WebView, static core list) cannot be selected.
+- Dropped from void-purge on purpose: orphaned files, log files, duplicate files and every root tool (root ones stay listed in `docs/ROOT_FUTURE.md`).
 
 ## Then
 
 | Step | Source module | Commands to port |
 |---|---|---|
-| A8 installer for APK, APKS, XAPK, OBB, extract | `kreza6173-pixel/pulse-install` (`webui/script.js`, `service.sh`) | streamed `pm install-create` / `install-write -S <size> -` / `install-commit`, `unzip`, XAPK `manifest.json`, OBB copy, `pm path` extract |
 | 1.0 release | this repository | README, About, icon, fastlane, signed release, final smoke test, merge to `main` |
 | Root track (future, owner decides) | see `docs/ROOT_FUTURE.md` | firewall chains, app data backup, private cache cleanup |
 
