@@ -13,26 +13,25 @@ A safe, reversible, local Android package manager built with Kotlin, Compose, an
 - A2 single-package Suspend/Unsuspend, Disable/Enable, Force stop, Remove/Restore, Clear data, read-back.
 - A3 snapshots, Restore/Undo, JSON Import/Export, Pins, batch operations. Acceptance test passed on the phone.
 - Debloat track: knowledge base, SAFE-only presets, review screen, compact disclaimer, search in preset list and package list, cross-manager restore via `pm install-existing`, one snapshot per batch, sequential read-back. CI and phone acceptance passed.
+- A4 permissions and AppOps. Phone-verified on the reference phone (see HANDOFF).
 
-## Complete on the reference phone: A4 permissions and AppOps
+## A5 autostart: partly done, one open item
 
-1. Permission audit, runtime read-back, Grant/Revoke. **Done, phone-verified (Drive, Meet, Play Store, Acode).**
-2. Shared-uid permissions with system-uid write refusal. **Done, phone-verified (securitycenter).**
-3. AppOps audit, OEM ops, uid/package scope split. **Done, phone-verified (Drive, securitycenter, Acode).**
-4. AppOps change. **Done: package scope only, hidden where a uid mode overrides it, uid scope disabled, system uids refused. Phone-verified (`873a114`).**
-5. Read-only Self-check. **Done on the reference phone: system 311/311 clean; user 463/463 with HyperOS `MIUIOP(10017): ask` recognised as read-only.**
-6. Large permission output fix. **Done: measured `android` at 108563 bytes and GMS at 83925 bytes; section extractor passed system Self-check 311/311.**
+Done and phone-verified:
 
-## A5 current
+- Read-only boot receiver audit from `dumpsys package` (BOOT_COMPLETED, LOCKED_BOOT_COMPLETED, QUICKBOOT_POWERON, MY_PACKAGE_REPLACED), Receiver Resolver Table only.
+- Background execution state (RUN_IN_BACKGROUND, RUN_ANY_IN_BACKGROUND) shown in the card; changes go through the A4 AppOps card.
+- Component Disable/Enable round trip for a receiver whose class is outside the app package (`com.thirtytwo.steps/androidx.profileinstaller.ProfileInstallReceiver`): APPLIED both ways.
 
-A5 started from the proven `kreza6173-pixel/void-autostart` module. The read-only parser foundation is pushed in `0615a610`. Its first CI runs #72 to #74 failed on one test because `package/.Receiver` shorthand was not accepted. Commit `fd067e8` fixes that parser and adds a regression test for fully qualified receiver names. Awaiting the next CI result.
+### OPEN: component control for shorthand receivers (`pkg/.Cls`)
 
-The source commands to port, only after phone read-back proves them:
+_Left open on purpose by the owner. Pick this up later._
 
-- Boot receiver scan: `dumpsys package <pkg>`.
-- Component control: `pm disable <pkg>/<component>` and `pm enable <pkg>/<component>`.
-- Background execution audit: `cmd appops get <pkg> RUN_IN_BACKGROUND` and `RUN_ANY_IN_BACKGROUND`.
-- Background execution control: `cmd appops set`, with a warning that broad denial can delay notifications.
+- Symptom: `.BootReceiver` / `.StartOnBootListener` rows keep showing **Disable** while the repository reports "component is already disabled". The card and the repository disagree.
+- Seen on three apps. On `com.eyalm.adns/.services.BootReceiver` the repository returned APPLIED for Disable, then "already disabled", while the row stayed on Disable: the device state is right, the card check is wrong.
+- Most likely cause: the card checks state with `isComponentDisabled(receiver.component, set)` using the shorthand name, while the set built by `queryDisabledComponents` holds fully qualified `pkg/pkg.Cls` names. Normalising both sides with `expandComponentName()` should make them agree.
+- Device state to remember: `com.thirtytwo.steps/com.thirtytwo.steps.BootReceiver` and `ch.abertschi.adfree/ch.abertschi.adfree.StartOnBootListener` and `com.eyalm.adns/com.eyalm.adns.services.BootReceiver` were really disabled during testing. Re-enable from the console with `pm enable <pkg>/<full.Cls>` if needed.
+- Acceptance when fixed: Disable then Enable on `.BootReceiver` both APPLIED, and the row button flips each time.
 
 ## Then
 
