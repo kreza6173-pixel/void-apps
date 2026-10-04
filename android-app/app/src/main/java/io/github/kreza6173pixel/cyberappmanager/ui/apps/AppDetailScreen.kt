@@ -36,9 +36,13 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
     var permConfirm by remember(pkg) { mutableStateOf<PermissionChange?>(null) }
     var appOpChange by remember(pkg) { mutableStateOf<AppOpRecord?>(null) }
     var componentConfirm by remember(pkg) { mutableStateOf<ComponentToggle?>(null) }
+    var notif by remember(pkg) { mutableStateOf<Result<NotificationAudit>?>(null) }
+    var notifResult by remember(pkg) { mutableStateOf<NotificationChangeResult?>(null) }
+    var listenerConfirm by remember(pkg) { mutableStateOf<ListenerService?>(null) }
+    var dndConfirm by remember(pkg) { mutableStateOf<Boolean?>(null) }
     var reload by remember(pkg) { mutableStateOf(0) }
     var pinned by remember(pkg) { mutableStateOf(pkg in repository.pins()) }
-    LaunchedEffect(pkg, connected, reload) { if (connected) { details = repository.details(pkg); audit = repository.permissionAudit(pkg); appOps = repository.appOpsAudit(pkg); autostart = repository.autostartRepo().audit(pkg); entry = repository.entryFor(pkg); pinned = pkg in repository.pins() } }
+    LaunchedEffect(pkg, connected, reload) { if (connected) { details = repository.details(pkg); audit = repository.permissionAudit(pkg); appOps = repository.appOpsAudit(pkg); autostart = repository.autostartRepo().audit(pkg); notif = repository.notificationRepo().audit(pkg); entry = repository.entryFor(pkg); pinned = pkg in repository.pins() } }
 
     val pending = confirm
     if (pending != null) AlertDialog(onDismissRequest = { confirm = null }, title = { Text(stringResource(actionLabel(pending))) }, text = { Text(stringResource(actionWarning(pending), entry?.label ?: pkg)) }, confirmButton = { TextButton({ confirm = null; busy = true; scope.launch { last = repository.perform(pkg, pending); entry = repository.entryFor(pkg); busy = false; reload++ } }) { Text(stringResource(R.string.action_confirm)) } }, dismissButton = { TextButton({ confirm = null }) { Text(stringResource(R.string.action_cancel)) } })
@@ -65,6 +69,24 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
         text = { Text(stringResource(if (pendingComp.enable) R.string.autostart_enable_body else R.string.autostart_disable_body, pendingComp.receiver.component.substringAfter('/'))) },
         confirmButton = { TextButton({ val toggle = pendingComp; componentConfirm = null; busy = true; scope.launch { componentResult = repository.autostartRepo().setComponent(pkg, toggle.receiver.component, toggle.enable); busy = false; reload++ } }) { Text(stringResource(R.string.action_confirm)) } },
         dismissButton = { TextButton({ componentConfirm = null }) { Text(stringResource(R.string.action_cancel)) } },
+    )
+
+    val pendingListener = listenerConfirm
+    if (pendingListener != null) AlertDialog(
+        onDismissRequest = { listenerConfirm = null },
+        title = { Text(stringResource(if (pendingListener.granted) R.string.notif_listener_revoke_title else R.string.notif_listener_allow_title)) },
+        text = { Text(stringResource(if (pendingListener.granted) R.string.notif_listener_revoke_body else R.string.notif_listener_allow_body, pendingListener.component)) },
+        confirmButton = { TextButton({ val l = pendingListener; listenerConfirm = null; busy = true; scope.launch { notifResult = repository.notificationRepo().setListener(pkg, l.component, !l.granted); busy = false; reload++ } }) { Text(stringResource(R.string.action_confirm)) } },
+        dismissButton = { TextButton({ listenerConfirm = null }) { Text(stringResource(R.string.action_cancel)) } },
+    )
+
+    val pendingDnd = dndConfirm
+    if (pendingDnd != null) AlertDialog(
+        onDismissRequest = { dndConfirm = null },
+        title = { Text(stringResource(if (pendingDnd) R.string.notif_dnd_allow_title else R.string.notif_dnd_revoke_title)) },
+        text = { Text(stringResource(if (pendingDnd) R.string.notif_dnd_allow_body else R.string.notif_dnd_revoke_body, entry?.label ?: pkg)) },
+        confirmButton = { TextButton({ val allow = pendingDnd; dndConfirm = null; busy = true; scope.launch { notifResult = repository.notificationRepo().setDndAccess(pkg, allow); busy = false; reload++ } }) { Text(stringResource(R.string.action_confirm)) } },
+        dismissButton = { TextButton({ dndConfirm = null }) { Text(stringResource(R.string.action_cancel)) } },
     )
 
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -94,6 +116,16 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
             componentResult = componentResult,
             canChange = canChange,
             onToggleComponent = { receiver, enable -> componentConfirm = ComponentToggle(receiver, enable) },
+            onRetry = { reload++ },
+        )
+        NotificationAccessCard(
+            permission = audit,
+            result = notif,
+            change = notifResult,
+            canChange = canChange,
+            onMute = { rec -> permConfirm = PermissionChange(rec, rec.granted != true) },
+            onListener = { listener -> listenerConfirm = listener },
+            onDnd = { allow -> dndConfirm = allow },
             onRetry = { reload++ },
         )
         when (val d = details) {
