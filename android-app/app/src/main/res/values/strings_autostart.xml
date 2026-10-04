@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autostart_title">Autostart / boot</string>
+    <string name="autostart_loading">Reading autostart state…</string>
+    <string name="autostart_error">Autostart audit unavailable: %1$s</string>
+    <string name="autostart_read_only">Read-only audit. No component or background setting was changed. Component control will be available after phone verification.</string>
+    <string name="autostart_no_receivers">No boot receiver found in the exposed package dump.</string>
+    <string name="autostart_background_title">Background execution</string>
+    <string name="autostart_raw_show">Show raw dumpsys output</string>
+    <string name="autostart_raw_hide">Hide raw output</string>
+</resources>

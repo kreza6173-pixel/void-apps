@@ -35,7 +35,7 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
     var appOpChange by remember(pkg) { mutableStateOf<AppOpRecord?>(null) }
     var reload by remember(pkg) { mutableStateOf(0) }
     var pinned by remember(pkg) { mutableStateOf(pkg in repository.pins()) }
-    LaunchedEffect(pkg, connected, reload) { if (connected) { details = repository.details(pkg); audit = repository.permissionAudit(pkg); appOps = repository.appOpsAudit(pkg); autostart = AutostartRepository(repository.bridge).audit(pkg); entry = repository.entryFor(pkg); pinned = pkg in repository.pins() } }
+    LaunchedEffect(pkg, connected, reload) { if (connected) { details = repository.details(pkg); audit = repository.permissionAudit(pkg); appOps = repository.appOpsAudit(pkg); autostart = repository.autostartRepo().audit(pkg); entry = repository.entryFor(pkg); pinned = pkg in repository.pins() } }
 
     val pending = confirm
     if (pending != null) AlertDialog(onDismissRequest = { confirm = null }, title = { Text(stringResource(actionLabel(pending))) }, text = { Text(stringResource(actionWarning(pending), entry?.label ?: pkg)) }, confirmButton = { TextButton({ confirm = null; busy = true; scope.launch { last = repository.perform(pkg, pending); entry = repository.entryFor(pkg); busy = false; reload++ } }) { Text(stringResource(R.string.action_confirm)) } }, dismissButton = { TextButton({ confirm = null }) { Text(stringResource(R.string.action_cancel)) } })
@@ -60,7 +60,7 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
         Text(e?.label ?: pkg, style = MaterialTheme.typography.headlineSmall)
         LtrMonoText(pkg)
         if (e != null) {
-            Text(stringResource(stateLabel(e.state)) + " · " + stringResource(if (e.isSystem) R.string.tag_system else R.string.tag_user))
+            Text(stringResource(stateLabel(e.state)) + " \u00b7 " + stringResource(if (e.isSystem) R.string.tag_system else R.string.tag_user))
             val kb = KnowledgeBase.classify(pkg, e.isSystem)
             Text(stringResource(R.string.kb_guide_format, stringResource(riskLabel(kb.risk)), kb.note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             e.protectedReason?.let { Text(stringResource(R.string.detail_protected_format, it), color = MaterialTheme.colorScheme.error) }
@@ -98,36 +98,135 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
 @Composable private fun PermissionAuditCard(result: PermissionAuditResult?, canChange: Boolean, onChange: (PermissionRecord) -> Unit) {
     when (result) {
         null -> Text(stringResource(R.string.permission_audit_loading), style = MaterialTheme.typography.titleSmall)
-        is PermissionAuditResult.Error -> { Text(stringResource(R.string.permission_audit_error), color = MaterialTheme.colorScheme.error); LtrMonoText(result.message); CopyShareButtons(result.message) }
+        is PermissionAuditResult.Error -> {
+            Text(stringResource(R.string.permission_audit_error), color = MaterialTheme.colorScheme.error)
+            LtrMonoText(result.message)
+            CopyShareButtons(result.message)
+        }
         is PermissionAuditResult.Ok -> {
-            val audit = result.audit; val shared = result.sharedUser; val writable = canChange && shared?.systemUid != true
-            Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.permission_audit_title), style = MaterialTheme.typography.titleSmall)
-                if (shared != null) Text(stringResource(if (shared.systemUid) R.string.permission_shared_system else R.string.permission_shared_app, shared.name, shared.uid), style = MaterialTheme.typography.labelSmall, color = if (shared.systemUid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-                if (audit.permissions.isEmpty()) Text(stringResource(R.string.permission_audit_empty), style = MaterialTheme.typography.bodySmall)
-                audit.permissions.forEach { p -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { SelectionContainer(Modifier.weight(1f)) { Text("${p.name} · ${permissionState(p.granted)}${kindSuffix(p)}", style = MaterialTheme.typography.bodySmall, color = permissionColor(p.granted)) }; if (writable && p.changeable) TextButton({ onChange(p) }) { Text(stringResource(if (p.granted == true) R.string.perm_revoke else R.string.perm_grant)) } } }
-                Text(stringResource(R.string.permission_audit_read_only), style = MaterialTheme.typography.labelSmall)
-            } }
+            val audit = result.audit
+            val shared = result.sharedUser
+            val writable = canChange && shared?.systemUid != true
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.permission_audit_title), style = MaterialTheme.typography.titleSmall)
+                    if (shared != null) Text(stringResource(if (shared.systemUid) R.string.permission_shared_system else R.string.permission_shared_app, shared.name, shared.uid), style = MaterialTheme.typography.labelSmall, color = if (shared.systemUid) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (audit.permissions.isEmpty()) Text(stringResource(R.string.permission_audit_empty), style = MaterialTheme.typography.bodySmall)
+                    audit.permissions.forEach { p ->
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            SelectionContainer(Modifier.weight(1f)) { Text("${p.name} \u00b7 ${permissionState(p.granted)}${kindSuffix(p)}", style = MaterialTheme.typography.bodySmall, color = permissionColor(p.granted)) }
+                            if (writable && p.changeable) TextButton({ onChange(p) }) { Text(stringResource(if (p.granted == true) R.string.perm_revoke else R.string.perm_grant)) }
+                        }
+                    }
+                    Text(stringResource(R.string.permission_audit_read_only), style = MaterialTheme.typography.labelSmall)
+                }
+            }
         }
     }
 }
 
+/** AppOps are shown apart from manifest permissions. Change is offered only for package modes not overridden by a uid mode. */
 @Composable private fun AppOpsAuditCard(result: AppOpsAuditResult?, canChange: Boolean, onChange: (AppOpRecord) -> Unit) {
     var showRaw by remember(result) { mutableStateOf(false) }
     when (result) {
         null -> Text(stringResource(R.string.appops_loading), style = MaterialTheme.typography.titleSmall)
-        is AppOpsAuditResult.Error -> { Text(stringResource(R.string.appops_error), color = MaterialTheme.colorScheme.error); LtrMonoText(result.message); CopyShareButtons(result.message) }
-        is AppOpsAuditResult.Ok -> { val ops = result.audit.operations; val editable = canChange && result.audit.scoped && result.uid != null; Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) { Text(stringResource(R.string.appops_title), style = MaterialTheme.typography.titleSmall); if (ops.isEmpty()) Text(stringResource(R.string.appops_empty), style = MaterialTheme.typography.bodySmall); ops.forEach { op -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { SelectionContainer(Modifier.weight(1f)) { Text(appOpLabel(op), style = MaterialTheme.typography.bodySmall, color = appOpColor(op.mode)) }; if (editable && op.changeable && packageScopeBlockedBy(op) == null) TextButton({ onChange(op) }) { Text(stringResource(R.string.appop_change)) } } }; Text(stringResource(R.string.appops_read_only), style = MaterialTheme.typography.labelSmall); TextButton({ showRaw = !showRaw }) { Text(stringResource(if (showRaw) R.string.appops_raw_hide else R.string.appops_raw_show)) }; if (showRaw) { LtrMonoText(result.raw); CopyShareButtons(result.raw) } } } }
+        is AppOpsAuditResult.Error -> {
+            Text(stringResource(R.string.appops_error), color = MaterialTheme.colorScheme.error)
+            LtrMonoText(result.message)
+            CopyShareButtons(result.message)
+        }
+        is AppOpsAuditResult.Ok -> {
+            val ops = result.audit.operations
+            val editable = canChange && result.audit.scoped && result.uid != null
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.appops_title), style = MaterialTheme.typography.titleSmall)
+                    if (ops.isEmpty()) Text(stringResource(R.string.appops_empty), style = MaterialTheme.typography.bodySmall)
+                    ops.forEach { op ->
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            SelectionContainer(Modifier.weight(1f)) { Text(appOpLabel(op), style = MaterialTheme.typography.bodySmall, color = appOpColor(op.mode)) }
+                            if (editable && op.changeable && packageScopeBlockedBy(op) == null) TextButton({ onChange(op) }) { Text(stringResource(R.string.appop_change)) }
+                        }
+                    }
+                    Text(stringResource(R.string.appops_read_only), style = MaterialTheme.typography.labelSmall)
+                    TextButton({ showRaw = !showRaw }) { Text(stringResource(if (showRaw) R.string.appops_raw_hide else R.string.appops_raw_show)) }
+                    if (showRaw) { LtrMonoText(result.raw); CopyShareButtons(result.raw) }
+                }
+            }
+        }
     }
 }
 
-@Composable private fun AppOpChangeDialog(op: AppOpRecord, onDismiss: () -> Unit, onConfirm: (String) -> Unit) { var opMode by remember(op) { mutableStateOf(op.packageMode ?: "default") }; AlertDialog(onDismissRequest = onDismiss, title = { Text(stringResource(R.string.appop_change_title, op.op)) }, text = { Column(verticalArrangement = Arrangement.spacedBy(2.dp)) { Text(stringResource(R.string.appop_scope_label), style = MaterialTheme.typography.labelMedium); ChoiceRow(stringResource(R.string.appop_scope_package), true, true) {}; ChoiceRow(stringResource(R.string.appop_scope_uid_unsupported), false, false) {}; Text(stringResource(R.string.appop_mode_label), style = MaterialTheme.typography.labelMedium); AppOpRecord.CHANGEABLE_MODES.forEach { m -> ChoiceRow(m, opMode == m, true) { opMode = m } }; Text(stringResource(R.string.appop_change_note), style = MaterialTheme.typography.labelSmall) } }, confirmButton = { TextButton({ onConfirm(opMode) }) { Text(stringResource(R.string.action_confirm)) } }, dismissButton = { TextButton(onDismiss) { Text(stringResource(R.string.action_cancel)) } }) }
-@Composable private fun ChoiceRow(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) { Row(verticalAlignment = Alignment.CenterVertically) { RadioButton(selected = selected, onClick = onClick, enabled = enabled); Text(label, style = MaterialTheme.typography.bodySmall) } }
-@Composable private fun AppOpResultCard(r: AppOpChangeResult) { val report = "$ ${r.command}\n${r.output}\n\nbefore: ${r.before ?: "default (not listed)"}\nafter: ${r.after ?: "default (not listed)"}"; Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(12.dp)) { Text(stringResource(R.string.appop_result_format, r.op, r.scope.name.lowercase(), r.mode, stringResource(verdictRes(r.verdict))), color = if (r.verdict == Verdict.APPLIED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error); if (r.verdict == Verdict.NOT_APPLIED && r.before == r.after && r.output.endsWith("(exit 0)")) Text(stringResource(R.string.appop_silently_kept), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error); LtrMonoText(report); CopyShareButtons(report) } } }
-@Composable private fun PermissionResultCard(r: PermissionChangeResult) { val report = "$ ${r.command}\n${r.output}\n\nbefore: ${permissionState(r.before)}\nafter: ${permissionState(r.after)}"; Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(12.dp)) { Text(stringResource(if (r.grant) R.string.perm_grant else R.string.perm_revoke) + " " + r.permission.substringAfterLast('.') + ": " + stringResource(verdictRes(r.verdict)), color = if (r.verdict == Verdict.APPLIED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error); LtrMonoText(report); CopyShareButtons(report) } } }
+/** Package-scope mode picker. Uid scope is shown disabled with the reason; the repository refuses it as well. */
+@Composable private fun AppOpChangeDialog(op: AppOpRecord, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+    var opMode by remember(op) { mutableStateOf(op.packageMode ?: "default") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.appop_change_title, op.op)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(stringResource(R.string.appop_scope_label), style = MaterialTheme.typography.labelMedium)
+                ChoiceRow(stringResource(R.string.appop_scope_package), selected = true, enabled = true) {}
+                ChoiceRow(stringResource(R.string.appop_scope_uid_unsupported), selected = false, enabled = false) {}
+                Text(stringResource(R.string.appop_mode_label), style = MaterialTheme.typography.labelMedium)
+                AppOpRecord.CHANGEABLE_MODES.forEach { m -> ChoiceRow(m, opMode == m, true) { opMode = m } }
+                Text(stringResource(R.string.appop_change_note), style = MaterialTheme.typography.labelSmall)
+            }
+        },
+        confirmButton = { TextButton({ onConfirm(opMode) }) { Text(stringResource(R.string.action_confirm)) } },
+        dismissButton = { TextButton(onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+    )
+}
+
+@Composable private fun ChoiceRow(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        RadioButton(selected = selected, onClick = onClick, enabled = enabled)
+        Text(label, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable private fun AppOpResultCard(r: AppOpChangeResult) {
+    val report = "$ ${r.command}\n${r.output}\n\nbefore: ${r.before ?: "default (not listed)"}\nafter: ${r.after ?: "default (not listed)"}"
+    val silentlyKept = r.verdict == Verdict.NOT_APPLIED && r.before == r.after && r.output.endsWith("(exit 0)")
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp)) {
+            Text(stringResource(R.string.appop_result_format, r.op, r.scope.name.lowercase(), r.mode, stringResource(verdictRes(r.verdict))), color = if (r.verdict == Verdict.APPLIED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+            if (silentlyKept) Text(stringResource(R.string.appop_silently_kept), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            LtrMonoText(report)
+            CopyShareButtons(report)
+        }
+    }
+}
+
+@Composable private fun PermissionResultCard(r: PermissionChangeResult) {
+    val report = "$ ${r.command}\n${r.output}\n\nbefore: ${permissionState(r.before)}\nafter: ${permissionState(r.after)}"
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp)) {
+            Text(stringResource(if (r.grant) R.string.perm_grant else R.string.perm_revoke) + " " + r.permission.substringAfterLast('.') + ": " + stringResource(verdictRes(r.verdict)), color = if (r.verdict == Verdict.APPLIED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+            LtrMonoText(report)
+            CopyShareButtons(report)
+        }
+    }
+}
+
 private fun permissionState(granted: Boolean?) = when (granted) { true -> "granted"; false -> "not granted"; null -> "unknown" }
-private fun kindSuffix(p: PermissionRecord): String = when { p.runtime && p.fixed -> " · runtime · fixed"; p.runtime -> " · runtime"; p.granted != null -> " · install-time"; else -> "" }
-private fun appOpLabel(op: AppOpRecord): String = buildString { append(op.op); if (op.scoped) { op.uidMode?.let { append(" · uid: ").append(it) }; op.packageMode?.let { append(" · package: ").append(it) } } else { append(" · ").append(op.mode); if (op.alsoReported.isNotEmpty()) append(" (also reported: " + op.alsoReported.joinToString(", ") + ")") }; if (op.oem) append(" · OEM · read-only") }
+private fun kindSuffix(p: PermissionRecord): String = when {
+    p.runtime && p.fixed -> " \u00b7 runtime \u00b7 fixed"
+    p.runtime -> " \u00b7 runtime"
+    p.granted != null -> " \u00b7 install-time"
+    else -> ""
+}
+private fun appOpLabel(op: AppOpRecord): String = buildString {
+    append(op.op)
+    if (op.scoped) {
+        op.uidMode?.let { append(" \u00b7 uid: ").append(it) }
+        op.packageMode?.let { append(" \u00b7 package: ").append(it) }
+    } else {
+        append(" \u00b7 ").append(op.mode)
+        if (op.alsoReported.isNotEmpty()) append(" (also reported: " + op.alsoReported.joinToString(", ") + ")")
+    }
+    if (op.oem) append(" \u00b7 OEM \u00b7 read-only")
+}
 @Composable private fun permissionColor(granted: Boolean?) = when (granted) { true -> MaterialTheme.colorScheme.primary; false -> MaterialTheme.colorScheme.error; null -> MaterialTheme.colorScheme.onSurfaceVariant }
 @Composable private fun appOpColor(mode: String) = when (mode) { "allow" -> MaterialTheme.colorScheme.primary; "foreground" -> MaterialTheme.colorScheme.tertiary; "deny", "ignore" -> MaterialTheme.colorScheme.error; else -> MaterialTheme.colorScheme.onSurfaceVariant }
 private fun verdictRes(v: Verdict) = when (v) { Verdict.APPLIED -> R.string.verdict_applied; Verdict.NOT_APPLIED -> R.string.verdict_not_applied; Verdict.UNVERIFIABLE -> R.string.verdict_unverifiable; Verdict.REFUSED -> R.string.verdict_refused; Verdict.FAILED -> R.string.verdict_failed }
