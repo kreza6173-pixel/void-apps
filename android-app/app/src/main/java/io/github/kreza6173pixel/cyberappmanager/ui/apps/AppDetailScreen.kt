@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.kreza6173pixel.cyberappmanager.R
+import io.github.kreza6173pixel.cyberappmanager.install.ExtractResult
+import io.github.kreza6173pixel.cyberappmanager.install.installerRepo
 import io.github.kreza6173pixel.cyberappmanager.inventory.*
 import io.github.kreza6173pixel.cyberappmanager.ui.common.CopyShareButtons
 import io.github.kreza6173pixel.cyberappmanager.ui.common.LtrMonoText
@@ -44,6 +46,7 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
     var networkResult by remember(pkg) { mutableStateOf<NetworkChangeResult?>(null) }
     var blockConfirm by remember(pkg) { mutableStateOf<Boolean?>(null) }
     var bgConfirm by remember(pkg) { mutableStateOf<Boolean?>(null) }
+    var extractResult by remember(pkg) { mutableStateOf<ExtractResult?>(null) }
     var reload by remember(pkg) { mutableStateOf(0) }
     var pinned by remember(pkg) { mutableStateOf(pkg in repository.pins()) }
     LaunchedEffect(pkg, connected, reload) { if (connected) { details = repository.details(pkg); audit = repository.permissionAudit(pkg); appOps = repository.appOpsAudit(pkg); autostart = repository.autostartRepo().audit(pkg); notif = repository.notificationRepo().audit(pkg); network = repository.networkRepo().audit(pkg); entry = repository.entryFor(pkg); pinned = pkg in repository.pins() } }
@@ -158,6 +161,10 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
             onBackground = { restrict -> bgConfirm = restrict },
             onRetry = { reload++ },
         )
+        ExtractCard(extractResult, enabled = connected && !busy && e != null) { asXapk ->
+            busy = true
+            scope.launch { extractResult = repository.installerRepo().extract(pkg, asXapk); busy = false }
+        }
         when (val d = details) {
             null -> Text(stringResource(if (connected) R.string.apps_loading else R.string.apps_waiting))
             is DetailsResult.Error -> { Text(stringResource(R.string.detail_error), color = MaterialTheme.colorScheme.error); LtrMonoText(d.message); CopyShareButtons(d.message) }
