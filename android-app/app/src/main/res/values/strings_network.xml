@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="net_title">Network access</string>
+    <string name="net_note">No root. Full block uses Android Chain 3 and background data uses netpolicy, both read back from Android before success is shown. Protected apps and shared system uids are refused.</string>
+    <string name="net_loading">Reading network access…</string>
+    <string name="net_error">Network access unavailable: %1$s</string>
+    <string name="net_uid">uid %1$s</string>
+    <string name="net_uid_unknown">uid could not be read, so changes are disabled.</string>
+    <string name="net_uid_system">Shared system uid, read-only.</string>
+    <string name="net_shared_warning">This uid is shared with: %1$s. A change here applies to all of them.</string>
+    <string name="net_block_title">Full network block (Chain 3)</string>
+    <string name="net_blocked">Blocked: no Wi-Fi or mobile data</string>
+    <string name="net_allowed">Allowed</string>
+    <string name="net_block_unknown">Block state could not be read on this ROM.</string>
+    <string name="net_chain3_unsupported">Chain 3 needs Android 11 or newer.</string>
+    <string name="net_chain3_state">Chain 3 firewall: %1$s</string>
+    <string name="net_chain3_on">on</string>
+    <string name="net_chain3_off">off (switched on with the first block)</string>
+    <string name="net_chain3_unknown">unknown</string>
+    <string name="net_source">read from %1$s</string>
+    <string name="net_block">Block</string>
+    <string name="net_unblock">Unblock</string>
+    <string name="net_bg_title">Background data</string>
+    <string name="net_bg_restricted">Restricted: no background data on mobile and metered networks</string>
+    <string name="net_bg_allowed">Allowed</string>
+    <string name="net_bg_unknown">Background data state could not be read.</string>
+    <string name="net_restrict">Restrict</string>
+    <string name="net_allow">Allow</string>
+    <string name="net_saver">Data Saver (global, read-only here): %1$s</string>
+    <string name="net_on">on</string>
+    <string name="net_off">off</string>
+    <string name="net_reboot_note">Check the block again after a reboot: some ROMs reset Chain 3 rules on boot.</string>
+    <string name="net_raw_show">Show raw output</string>
+    <string name="net_raw_hide">Hide raw output</string>
+    <string name="net_block_confirm_title">Block all network for this app?</string>
+    <string name="net_block_confirm_body">%1$s will have no Wi-Fi or mobile data until you unblock it here. If Chain 3 is off it is switched on first. Messages, sync and updates for this app stop.</string>
+    <string name="net_unblock_confirm_title">Unblock network for this app?</string>
+    <string name="net_unblock_confirm_body">%1$s will be able to use Wi-Fi and mobile data again.</string>
+    <string name="net_bg_confirm_title">Restrict background data?</string>
+    <string name="net_bg_confirm_body">%1$s will not use mobile or metered data while it is in the background. Wi-Fi and foreground use are not affected.</string>
+    <string name="net_bg_allow_title">Allow background data?</string>
+    <string name="net_bg_allow_body">%1$s will be able to use mobile data in the background again.</string>
+    <string name="net_silently_kept">Android returned success but the state did not change. The system silently ignored this change.</string>
+</resources>

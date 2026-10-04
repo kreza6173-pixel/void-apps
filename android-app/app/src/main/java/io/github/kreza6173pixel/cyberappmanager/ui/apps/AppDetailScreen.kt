@@ -40,9 +40,13 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
     var notifResult by remember(pkg) { mutableStateOf<NotificationChangeResult?>(null) }
     var listenerConfirm by remember(pkg) { mutableStateOf<ListenerService?>(null) }
     var dndConfirm by remember(pkg) { mutableStateOf<Boolean?>(null) }
+    var network by remember(pkg) { mutableStateOf<Result<NetworkAudit>?>(null) }
+    var networkResult by remember(pkg) { mutableStateOf<NetworkChangeResult?>(null) }
+    var blockConfirm by remember(pkg) { mutableStateOf<Boolean?>(null) }
+    var bgConfirm by remember(pkg) { mutableStateOf<Boolean?>(null) }
     var reload by remember(pkg) { mutableStateOf(0) }
     var pinned by remember(pkg) { mutableStateOf(pkg in repository.pins()) }
-    LaunchedEffect(pkg, connected, reload) { if (connected) { details = repository.details(pkg); audit = repository.permissionAudit(pkg); appOps = repository.appOpsAudit(pkg); autostart = repository.autostartRepo().audit(pkg); notif = repository.notificationRepo().audit(pkg); entry = repository.entryFor(pkg); pinned = pkg in repository.pins() } }
+    LaunchedEffect(pkg, connected, reload) { if (connected) { details = repository.details(pkg); audit = repository.permissionAudit(pkg); appOps = repository.appOpsAudit(pkg); autostart = repository.autostartRepo().audit(pkg); notif = repository.notificationRepo().audit(pkg); network = repository.networkRepo().audit(pkg); entry = repository.entryFor(pkg); pinned = pkg in repository.pins() } }
 
     val pending = confirm
     if (pending != null) AlertDialog(onDismissRequest = { confirm = null }, title = { Text(stringResource(actionLabel(pending))) }, text = { Text(stringResource(actionWarning(pending), entry?.label ?: pkg)) }, confirmButton = { TextButton({ confirm = null; busy = true; scope.launch { last = repository.perform(pkg, pending); entry = repository.entryFor(pkg); busy = false; reload++ } }) { Text(stringResource(R.string.action_confirm)) } }, dismissButton = { TextButton({ confirm = null }) { Text(stringResource(R.string.action_cancel)) } })
@@ -89,6 +93,24 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
         dismissButton = { TextButton({ dndConfirm = null }) { Text(stringResource(R.string.action_cancel)) } },
     )
 
+    val pendingBlock = blockConfirm
+    if (pendingBlock != null) AlertDialog(
+        onDismissRequest = { blockConfirm = null },
+        title = { Text(stringResource(if (pendingBlock) R.string.net_block_confirm_title else R.string.net_unblock_confirm_title)) },
+        text = { Text(stringResource(if (pendingBlock) R.string.net_block_confirm_body else R.string.net_unblock_confirm_body, entry?.label ?: pkg)) },
+        confirmButton = { TextButton({ val block = pendingBlock; blockConfirm = null; busy = true; scope.launch { networkResult = repository.networkRepo().setNetworkBlocked(pkg, block); busy = false; reload++ } }) { Text(stringResource(R.string.action_confirm)) } },
+        dismissButton = { TextButton({ blockConfirm = null }) { Text(stringResource(R.string.action_cancel)) } },
+    )
+
+    val pendingBg = bgConfirm
+    if (pendingBg != null) AlertDialog(
+        onDismissRequest = { bgConfirm = null },
+        title = { Text(stringResource(if (pendingBg) R.string.net_bg_confirm_title else R.string.net_bg_allow_title)) },
+        text = { Text(stringResource(if (pendingBg) R.string.net_bg_confirm_body else R.string.net_bg_allow_body, entry?.label ?: pkg)) },
+        confirmButton = { TextButton({ val restrict = pendingBg; bgConfirm = null; busy = true; scope.launch { networkResult = repository.networkRepo().setBackgroundRestricted(pkg, restrict); busy = false; reload++ } }) { Text(stringResource(R.string.action_confirm)) } },
+        dismissButton = { TextButton({ bgConfirm = null }) { Text(stringResource(R.string.action_cancel)) } },
+    )
+
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         val e = entry
         Text(e?.label ?: pkg, style = MaterialTheme.typography.headlineSmall)
@@ -126,6 +148,14 @@ fun AppDetailScreen(pkg: String, repository: InventoryRepository, connected: Boo
             onMute = { rec -> permConfirm = PermissionChange(rec, rec.granted != true) },
             onListener = { listener -> listenerConfirm = listener },
             onDnd = { allow -> dndConfirm = allow },
+            onRetry = { reload++ },
+        )
+        NetworkAccessCard(
+            result = network,
+            change = networkResult,
+            canChange = canChange,
+            onBlock = { block -> blockConfirm = block },
+            onBackground = { restrict -> bgConfirm = restrict },
             onRetry = { reload++ },
         )
         when (val d = details) {
