@@ -49,6 +49,10 @@ class AutostartRepository(private val bridge: ExecBridge) {
      * HyperOS (and possibly other ROMs) silently ignores shorthand component names
      * like `pkg/.Cls` in pm disable/enable, so the command always uses the fully
      * qualified form `pkg/full.class.Name`.
+     *
+     * Read-back uses a targeted grep on the `disabledComponents:` section of
+     * `dumpsys package` instead of parsing the full output, because the section
+     * structure varies across ROMs.
      */
     suspend fun setComponent(
         pkg: String,
@@ -62,13 +66,15 @@ class AutostartRepository(private val bridge: ExecBridge) {
         if (!isValidComponentName(component)) return@withContext refused("invalid component name")
         if (component.substringBefore('/') != pkg) return@withContext refused("component does not belong to this package")
 
-        val beforeAudit = audit(pkg).getOrNull()
-            ?: return@withContext refused("autostart state unavailable")
-        val wasBefore = isComponentDisabled(component, beforeAudit.disabledComponents)
+        /* Read current state with a targeted grep. */
+        val className = resolveClassName(component)
+        val wasBefore = isComponentCurrentlyDisabled(pkg, className)
+            ?: return@withContext refused("component state unavailable")
 
         if (enable && !wasBefore) return@withContext refused("component is already enabled", false)
         if (!enable && wasBefore) return@withContext refused("component is already disabled", true)
 
+        /* Execute the change with the fully qualified name. */
         val fullComponent = expandComponentName(component)
         val qc = ShellQuoting.quote(fullComponent)
         val cmd = if (enable) "pm enable $qc" else "pm disable $qc"
@@ -82,8 +88,8 @@ class AutostartRepository(private val bridge: ExecBridge) {
             }
         }
 
-        val afterAudit = audit(pkg).getOrNull()
-        val isAfter = afterAudit?.let { isComponentDisabled(component, it.disabledComponents) }
+        /* Read back with the same targeted grep. */
+        val isAfter = isComponentCurrentlyDisabled(pkg, className)
         val expectedDisabled = !enable
         val verdict = when {
             isAfter == null -> Verdict.UNVERIFIABLE
@@ -92,6 +98,34 @@ class AutostartRepository(private val bridge: ExecBridge) {
         }
 
         ComponentChangeResult(pkg, component, enable, verdict, cmd, output, wasBefore, isAfter)
+    }
+
+    /**
+     * Targeted read-back: checks whether the class name appears inside the
+     * `disabledComponents:` section of `dumpsys package`.
+     *
+     * Uses `sed` to extract the `disabledComponents:` block and grep for the class,
+     * avoiding full-output parsing that can break across ROM formats.
+     */
+    private fun isComponentCurrentlyDisabled(pkg: String, className: String): Boolean? {
+        val q = ShellQuoting.quote(pkg)
+        val qClass = ShellQuoting.quote(className)
+        val cmd = "dumpsys package $q | sed -n '/disabledComponents:/,/enabledComponents:\\|^[^ ]/p' | grep -q $qClass"
+        return when (val out = bridge.execBlocking(cmd, TIMEOUT_MS)) {
+            is ExecOutcome.Failed -> null
+            is ExecOutcome.Completed -> out.result.exitCode == 0
+        }
+    }
+
+    /**
+     * Extracts the bare class name from a component reference.
+     * `com.example.app/.BootReceiver` -> `com.example.app.BootReceiver`
+     * `com.example.app/com.example.app.BootReceiver` -> `com.example.app.BootReceiver`
+     */
+    private fun resolveClassName(component: String): String {
+        val pkg = component.substringBefore('/')
+        val cls = component.substringAfter('/')
+        return if (cls.startsWith(".")) "$pkg$cls" else cls
     }
 
     private companion object {
