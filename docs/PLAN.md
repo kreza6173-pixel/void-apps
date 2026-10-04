@@ -1,10 +1,10 @@
 # VOID // APPS: roadmap and remaining work
 
-Updated: 2026-10-04. See `docs/HANDOFF.md` for the narrative and evidence.
+Updated: 2026-10-04. See `docs/HANDOFF.md` for the narrative and evidence, and `docs/ROOT_FUTURE.md` for root features kept for later.
 
 ## Product goal
 
-A safe, reversible, local Android package manager built with Kotlin, Compose, and Shizuku UserService. It never pretends a shell command succeeded when the ROM rejected it. Shizuku is the only execution path; Root and Dhizuku are out of scope.
+A safe, reversible, local Android package manager built with Kotlin, Compose, and Shizuku UserService. It never pretends a shell command succeeded when the ROM rejected it. Shizuku is the only execution path today. Root features from the owner's modules are recorded in `docs/ROOT_FUTURE.md` as future work; Dhizuku is out of scope.
 
 ## Complete
 
@@ -47,16 +47,27 @@ _Left open on purpose by the owner. Pick this up later._
 
 - Evidence: `cmd notification allow_dnd 'com.thirtytwo.steps'` returned exit 0, but `enabled_notification_policy_access_packages` remained unchanged (`before: not granted`, `after: not granted`).
 - Do not claim DND access was granted when read-back disagrees.
-- Possible future investigation: read `dumpsys notification` and test the HyperOS-specific AppOps/policy path. No automatic fallback is trusted yet.
+- Possible future investigation: read `dumpsys notification` and test the HyperOS-specific AppOps/policy path. A root retry is listed in `docs/ROOT_FUTURE.md`. No automatic fallback is trusted yet.
+
+## A7 network: implemented, waiting for the phone test
+
+Ported from `kreza6173-pixel/VOID-WALL` (`webui/wall.js`), per-app, no root. New "Network access" card in app details.
+
+- Full network block (Chain 3, Android 11+): `cmd connectivity set-package-networking-enabled false|true <pkg>`. Chain 3 is switched on with `cmd connectivity set-chain3-enabled true` before the first block (VOID-WALL does this at start); it is never switched off automatically.
+- Block read-back: `cmd connectivity get-package-networking-enabled <pkg>`; fallback `dumpsys connectivity trafficcontroller` (uid row with OEM_DENY_3). A block is APPLIED only when the package reads as blocked **and** Chain 3 reads as on. No readable state means no button.
+- Background data: `cmd netpolicy add|remove restrict-background-blacklist <uid>`, read back from `cmd netpolicy list restrict-background-blacklist` (every uid after the colon is parsed; VOID-WALL only took the first number per line).
+- uid from `pm list packages -U --user 0 <pkg>` with exact match. Shared uids are shown with a warning; uids below 10000 and protected packages are refused in the repository.
+- Data Saver state is shown read-only.
+- Unknown on the phone yet: the exact output format of the `get-*` commands, and whether Chain 3 rules survive a reboot on HyperOS. The raw output section exists to settle both.
 
 ## Then
 
 | Step | Source module | Commands to port |
 |---|---|---|
-| A7 per-app network block, background data | `kreza6173-pixel/VOID-WALL` (`webui/wall.js`) | Chain 3 via `cmd connectivity` (Android 11+), background data via `netpolicy` |
 | A8 installer for APK, APKS, XAPK, OBB, extract | `kreza6173-pixel/pulse-install` (`webui/script.js`, `service.sh`) | streamed `pm install-create` / `install-write -S <size> -` / `install-commit`, `unzip`, XAPK `manifest.json`, OBB copy, `pm path` extract |
 | 1.0 release | this repository | README, About, icon, fastlane, signed release, final smoke test, merge to `main` |
+| Root track (future, owner decides) | see `docs/ROOT_FUTURE.md` | firewall chains, app data backup, private cache cleanup |
 
 ## Gates
 
-No INTERNET permission. No protected bypass. No destructive batch without preview and snapshot. No support claim without a device probe. No release claim while CI or device acceptance is red. Code and its strings/resources always land in one commit. Shell filters are measured on the phone before they are relied on. A write control is shown only where a phone test showed Android accepts it. ROM-specific support comes from issue reports with phone evidence. APKM and root-only firewall features remain out of scope.
+No INTERNET permission. No protected bypass. No destructive batch without preview and snapshot. No support claim without a device probe. No release claim while CI or device acceptance is red. Code and its strings/resources always land in one commit. Shell filters are measured on the phone before they are relied on. A write control is shown only where a phone test showed Android accepts it. ROM-specific support comes from issue reports with phone evidence. APKM stays out of scope. Root-only features stay out of the current track and are kept in `docs/ROOT_FUTURE.md`.
