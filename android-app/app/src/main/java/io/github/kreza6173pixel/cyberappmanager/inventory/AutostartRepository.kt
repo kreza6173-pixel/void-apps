@@ -46,12 +46,9 @@ class AutostartRepository(private val bridge: ExecBridge) {
     /**
      * Guarded component disable/enable with read-back.
      *
-     * Runs `pm disable <component>` or `pm enable <component>`, then re-reads the
-     * package dump to verify the component state changed. APPLIED only when the
-     * read-back confirms the new state matches.
-     *
-     * Warning: disabling a boot receiver prevents the app from starting at boot.
-     * Some apps may stop working correctly if their receiver is disabled.
+     * HyperOS (and possibly other ROMs) silently ignores shorthand component names
+     * like `pkg/.Cls` in pm disable/enable, so the command always uses the fully
+     * qualified form `pkg/full.class.Name`.
      */
     suspend fun setComponent(
         pkg: String,
@@ -72,7 +69,8 @@ class AutostartRepository(private val bridge: ExecBridge) {
         if (enable && !wasBefore) return@withContext refused("component is already enabled", false)
         if (!enable && wasBefore) return@withContext refused("component is already disabled", true)
 
-        val qc = ShellQuoting.quote(component)
+        val fullComponent = expandComponentName(component)
+        val qc = ShellQuoting.quote(fullComponent)
         val cmd = if (enable) "pm enable $qc" else "pm disable $qc"
         val output = when (val out = bridge.execBlocking(cmd, TIMEOUT_MS)) {
             is ExecOutcome.Failed -> return@withContext ComponentChangeResult(
@@ -99,6 +97,19 @@ class AutostartRepository(private val bridge: ExecBridge) {
     private companion object {
         const val TIMEOUT_MS = 20_000
     }
+}
+
+/**
+ * Expands a shorthand component name to its fully qualified form.
+ * `com.example.app/.BootReceiver` becomes `com.example.app/com.example.app.BootReceiver`.
+ * Already fully qualified names are returned unchanged.
+ */
+fun expandComponentName(component: String): String {
+    val slash = component.indexOf('/')
+    if (slash < 0) return component
+    val pkg = component.substring(0, slash)
+    val cls = component.substring(slash + 1)
+    return if (cls.startsWith(".")) "$pkg/$pkg$cls" else component
 }
 
 internal fun InventoryRepository.autostartRepo(): AutostartRepository {

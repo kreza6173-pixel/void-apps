@@ -120,4 +120,18 @@ class AutostartAuditTest {
         val disabled = parseDisabledComponents("com.example.app", "no disabled components here")
         assertTrue(disabled.isEmpty())
     }
+
+    @Test fun expandsShorthandComponentName() {
+        assertEquals(
+            "com.example.app/com.example.app.BootReceiver",
+            expandComponentName("com.example.app/.BootReceiver"),
+        )
+    }
+
+    @Test fun keepsFullyQualifiedComponentName() {
+        assertEquals(
+            "com.example.app/com.example.app.BootReceiver",
+            expandComponentName("com.example.app/com.example.app.BootReceiver"),
+        )
+    }
 }
