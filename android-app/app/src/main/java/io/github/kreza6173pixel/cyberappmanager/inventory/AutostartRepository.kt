@@ -8,12 +8,6 @@ import kotlinx.coroutines.withContext
 
 /**
  * A5 autostart probe and guarded component control.
- *
- * Read-only: `dumpsys package` for boot receivers, `appops get` for background state.
- * Write: `pm disable/enable` for individual receiver components, with read-back.
- *
- * Background execution control (RUN_IN_BACKGROUND, RUN_ANY_IN_BACKGROUND) is already
- * handled by A4's AppOps infrastructure in InventoryRepository.setAppOp.
  */
 class AutostartRepository(private val bridge: ExecBridge) {
 
@@ -40,19 +34,48 @@ class AutostartRepository(private val bridge: ExecBridge) {
             is ExecOutcome.Completed -> out.result.stdout
         }
 
-        Result.success(parseAutostartAudit(pkg, dump + "\n" + opsText))
+        val audit = parseAutostartAudit(pkg, dump + "\n" + opsText)
+
+        /*
+         * The section parser for disabledComponents is fragile across ROM formats.
+         * Use a targeted sed pipeline to reliably extract disabled components,
+         * then merge into the audit result.
+         */
+        val disabled = queryDisabledComponents(pkg)
+        val merged = if (disabled != null && disabled != audit.disabledComponents) {
+            audit.copy(disabledComponents = disabled)
+        } else {
+            audit
+        }
+
+        Result.success(merged)
+    }
+
+    /**
+     * Targeted query: extracts the disabledComponents section with sed and
+     * returns the set of fully qualified component names found.
+     * Returns null if the command fails (non-fatal).
+     */
+    private fun queryDisabledComponents(pkg: String): Set<String>? {
+        val q = ShellQuoting.quote(pkg)
+        val cmd = "dumpsys package $q | sed -n '/disabledComponents:/,/enabledComponents:\\|^[^ ]/p'"
+        val out = bridge.execBlocking(cmd, TIMEOUT_MS)
+        if (out is ExecOutcome.Failed) return null
+        val text = (out as ExecOutcome.Completed).result.stdout
+        val components = mutableSetOf<String>()
+        for (line in text.lineSequence()) {
+            val trimmed = line.trim()
+            if (trimmed.isEmpty() || trimmed == "disabledComponents:" ||
+                trimmed == "enabledComponents:" || trimmed.startsWith("---")) continue
+            if (trimmed.contains('.') && !trimmed.contains(' ') && !trimmed.endsWith(":")) {
+                components.add("$pkg/$trimmed")
+            }
+        }
+        return components
     }
 
     /**
      * Guarded component disable/enable with read-back.
-     *
-     * HyperOS (and possibly other ROMs) silently ignores shorthand component names
-     * like `pkg/.Cls` in pm disable/enable, so the command always uses the fully
-     * qualified form `pkg/full.class.Name`.
-     *
-     * Read-back uses a targeted grep on the `disabledComponents:` section of
-     * `dumpsys package` instead of parsing the full output, because the section
-     * structure varies across ROMs.
      */
     suspend fun setComponent(
         pkg: String,
@@ -66,7 +89,6 @@ class AutostartRepository(private val bridge: ExecBridge) {
         if (!isValidComponentName(component)) return@withContext refused("invalid component name")
         if (component.substringBefore('/') != pkg) return@withContext refused("component does not belong to this package")
 
-        /* Read current state with a targeted grep. */
         val className = resolveClassName(component)
         val wasBefore = isComponentCurrentlyDisabled(pkg, className)
             ?: return@withContext refused("component state unavailable")
@@ -74,7 +96,6 @@ class AutostartRepository(private val bridge: ExecBridge) {
         if (enable && !wasBefore) return@withContext refused("component is already enabled", false)
         if (!enable && wasBefore) return@withContext refused("component is already disabled", true)
 
-        /* Execute the change with the fully qualified name. */
         val fullComponent = expandComponentName(component)
         val qc = ShellQuoting.quote(fullComponent)
         val cmd = if (enable) "pm enable $qc" else "pm disable $qc"
@@ -88,7 +109,6 @@ class AutostartRepository(private val bridge: ExecBridge) {
             }
         }
 
-        /* Read back with the same targeted grep. */
         val isAfter = isComponentCurrentlyDisabled(pkg, className)
         val expectedDisabled = !enable
         val verdict = when {
@@ -100,13 +120,6 @@ class AutostartRepository(private val bridge: ExecBridge) {
         ComponentChangeResult(pkg, component, enable, verdict, cmd, output, wasBefore, isAfter)
     }
 
-    /**
-     * Targeted read-back: checks whether the class name appears inside the
-     * `disabledComponents:` section of `dumpsys package`.
-     *
-     * Uses `sed` to extract the `disabledComponents:` block and grep for the class,
-     * avoiding full-output parsing that can break across ROM formats.
-     */
     private fun isComponentCurrentlyDisabled(pkg: String, className: String): Boolean? {
         val q = ShellQuoting.quote(pkg)
         val qClass = ShellQuoting.quote(className)
@@ -117,11 +130,6 @@ class AutostartRepository(private val bridge: ExecBridge) {
         }
     }
 
-    /**
-     * Extracts the bare class name from a component reference.
-     * `com.example.app/.BootReceiver` -> `com.example.app.BootReceiver`
-     * `com.example.app/com.example.app.BootReceiver` -> `com.example.app.BootReceiver`
-     */
     private fun resolveClassName(component: String): String {
         val pkg = component.substringBefore('/')
         val cls = component.substringAfter('/')
@@ -133,11 +141,6 @@ class AutostartRepository(private val bridge: ExecBridge) {
     }
 }
 
-/**
- * Expands a shorthand component name to its fully qualified form.
- * `com.example.app/.BootReceiver` becomes `com.example.app/com.example.app.BootReceiver`.
- * Already fully qualified names are returned unchanged.
- */
 fun expandComponentName(component: String): String {
     val slash = component.indexOf('/')
     if (slash < 0) return component
