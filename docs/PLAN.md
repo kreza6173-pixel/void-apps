@@ -33,11 +33,20 @@ _Left open on purpose by the owner. Pick this up later._
 - Device state to remember: `com.thirtytwo.steps/com.thirtytwo.steps.BootReceiver` and `ch.abertschi.adfree/ch.abertschi.adfree.StartOnBootListener` and `com.eyalm.adns/com.eyalm.adns.services.BootReceiver` were really disabled during testing. Re-enable from the console with `pm enable <pkg>/<full.Cls>` if needed.
 - Acceptance when fixed: Disable then Enable on `.BootReceiver` both APPLIED, and the row button flips each time.
 
+## A6 notifications: implemented, awaiting phone test
+
+Built from `kreza6173-pixel/void-pulse`, per-app only (global DND mode stays out of a package manager). New card in App details, below Autostart.
+
+- Posting notifications (mute): the POST_NOTIFICATIONS runtime permission, changed through the A4 `setPermission` path with its read-back. Apps that do not request it show "not applicable".
+- Listener access: services from `pm query-services --user 0 --components -a android.service.notification.NotificationListenerService` (dumpsys grep fallback), state from `settings get secure enabled_notification_listeners`, change with `cmd notification allow_listener|disallow_listener <pkg/full.Cls>`.
+- DND access: state from `settings get secure enabled_notification_policy_access_packages`, change with `cmd notification allow_dnd|disallow_dnd <pkg>`. Allow is offered only when the app requests ACCESS_NOTIFICATION_POLICY.
+- Every component comparison is normalised (A5 lesson). Unreadable settings show "unknown" and disable changes instead of guessing "not granted". Protected packages are refused in the repository.
+- Not yet measured on the phone: whether HyperOS keeps the two secure settings in sync after `cmd notification` changes. If read-back says NOT_APPLIED with exit 0, the next step is reading `dumpsys notification` instead.
+
 ## Then
 
 | Step | Source module | Commands to port |
 |---|---|---|
-| A6 notification listener, DND access, per-app notification mute | `kreza6173-pixel/void-pulse` | `pm revoke/grant POST_NOTIFICATIONS`, `cmd appops set POST_NOTIFICATIONS`, `cmd notification allow_listener/disallow_listener`, `allow_dnd/disallow_dnd` |
 | A7 per-app network block, background data | `kreza6173-pixel/VOID-WALL` (`webui/wall.js`) | Chain 3 via `cmd connectivity` (Android 11+), background data via `netpolicy` |
 | A8 installer for APK, APKS, XAPK, OBB, extract | `kreza6173-pixel/pulse-install` (`webui/script.js`, `service.sh`) | streamed `pm install-create` / `install-write -S <size> -` / `install-commit`, `unzip`, XAPK `manifest.json`, OBB copy, `pm path` extract |
 | 1.0 release | this repository | README, About, icon, fastlane, signed release, final smoke test, merge to `main` |

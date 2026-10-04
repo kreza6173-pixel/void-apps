@@ -30,7 +30,8 @@ Implement a whole section (code, tests, wiring, strings) before asking for a pho
 | Debloat | done | CI green and phone acceptance |
 | A4 permissions + AppOps | done on reference phone | Self-check system 311/311 clean; user 463/463; HyperOS ask parsed read-only |
 | A5 autostart | partly done | Audit and fully qualified component round trip phone-verified; shorthand receivers OPEN (see below) |
-| A6 to A8 | open | |
+| A6 notifications | implemented, awaiting phone test | Mute via POST_NOTIFICATIONS, listener and DND access with settings read-back |
+| A7 to A8 | open | |
 | 1.0 release | open | |
 
 ## Acceptance record
@@ -58,7 +59,7 @@ Component control for receivers listed in shorthand form (`pkg/.Cls`) is not rel
 ## Remaining work
 
 1. A5 open item above (optional, owner decides when).
-2. A6 notification mute, notification-listener access and DND access, based on `void-pulse`.
+2. A6 phone test: mute/unmute, listener allow/revoke, DND allow/revoke (see PLAN).
 3. A7 Chain3/netpolicy based on `VOID-WALL`.
 4. A8 streamed APK/APKS/XAPK installer based on `pulse-install`; APKM stays out of scope.
 5. 1.0 README, About, icon, fastlane, signed release, smoke test and merge to `main`.
@@ -82,3 +83,5 @@ AppOps is separate from runtime permissions. OEM operations are shown but never 
 - `84ad3c9`: A5 component Disable/Enable with read-back.
 - `91082cb`: fully qualified class names for `pm disable/enable`.
 - `a070171`, `eed9ff5`, `f82f0fb`: read-back attempts for disabledComponents; fully qualified round trip works, shorthand UI state still open.
+- `f3c8266`: A5 status recorded, shorthand item left open.
+- `21f03bb`: A6 notification card (mute, listener access, DND access) with read-back and 10 unit tests.
