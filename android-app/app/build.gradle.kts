@@ -20,8 +20,9 @@ android {
         applicationId = "io.github.kreza6173pixel.voidapps"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        // 1.0.0 = first native release. F-Droid reads these two lines (see docs/fdroid).
+        versionCode = 100
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

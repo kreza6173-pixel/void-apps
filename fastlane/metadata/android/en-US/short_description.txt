@@ -1,0 +1,1 @@
+App manager via Shizuku: freeze, debloat, permissions, network, install. No root

@@ -1,0 +1,29 @@
+# Draft for the F-Droid data repository (gitlab.com/fdroid/fdroiddata, file metadata/<appid>.yml).
+# Submit it as a merge request after the v1.0.0 tag exists. Store texts and images are read
+# from fastlane/metadata/android/en-US in this repository.
+Categories:
+  - System
+License: MIT
+AuthorName: kreza6173-pixel
+SourceCode: https://github.com/kreza6173-pixel/void-apps
+IssueTracker: https://github.com/kreza6173-pixel/void-apps/issues
+Changelog: https://github.com/kreza6173-pixel/void-apps/blob/main/CHANGELOG.md
+
+AutoName: VOID // APPS
+
+RepoType: git
+Repo: https://github.com/kreza6173-pixel/void-apps.git
+
+Builds:
+  - versionName: 1.0.0
+    versionCode: 100
+    commit: v1.0.0
+    subdir: android-app/app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+UpdateCheckData: android-app/app/build.gradle.kts|versionCode\s*=\s*(\d+)|.|versionName\s*=\s*"([^"]+)"
+CurrentVersion: 1.0.0
+CurrentVersionCode: 100
