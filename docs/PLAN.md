@@ -17,6 +17,8 @@ A safe, reversible, local Android package manager built with Kotlin, Compose, an
 - A7 per-app network block (Chain 3) and background data (netpolicy). Phone-verified on user, system and protected apps (see HANDOFF).
 - A8 installer (APK / APKS / XAPK, OBB, Inspect, extract) and cleaner (cache, empty folders, running apps). Phone-verified by the owner.
 - 1.0.0 release files: README, CHANGELOG, fastlane metadata, store images, F-Droid metadata draft, release guide.
+- Pre-release cleanup: the old Cyber App Manager WebUI module removed from the tree.
+- Signing secrets in place, CI green with `app-release`, PR #1 merged into `main` (`7dc6cc8`).
 
 ## A5 autostart: partly done, one open item
 
@@ -32,7 +34,7 @@ _Left open on purpose by the owner. Pick this up later._
 
 - Symptom: `.BootReceiver` / `.StartOnBootListener` rows keep showing **Disable** while the repository reports "component is already disabled". The card and the repository disagree.
 - Seen on three apps. On `com.eyalm.adns/.services.BootReceiver` the repository returned APPLIED for Disable, then "already disabled", while the row stayed on Disable: the device state is right, the card check is wrong.
-- Most likely cause: the card checks state with `isComponentDisabled(receiver.component, set)` using the shorthand name, while the set built by `queryDisabledComponents` holds fully qualified `pkg/pkg.Cls` names. Normalising both sides with `expandComponentName()` should make them agree.
+- Confirmed cause (code review 2026-10-05): the card calls `isComponentDisabled(receiver.component, set)` in `AutostartAudit.kt` with the shorthand name, while `queryDisabledComponents` returns fully qualified `pkg/pkg.Cls` names. None of its comparisons build `pkg/pkg.Cls` from `pkg/.Cls`. Fix: compare `expandComponentName()` of both sides, plus a unit test for `pkg/.Cls` against `pkg/pkg.Cls`.
 - Device state to remember: `com.thirtytwo.steps/com.thirtytwo.steps.BootReceiver`, `ch.abertschi.adfree/ch.abertschi.adfree.StartOnBootListener`, and `com.eyalm.adns/com.eyalm.adns.services.BootReceiver` were really disabled during testing. Re-enable from the console with `pm enable <pkg>/<full.Cls>` if needed.
 - Acceptance when fixed: Disable then Enable on `.BootReceiver` both APPLIED, and the row button flips each time.
 
@@ -72,8 +74,11 @@ One new home screen, **Install & clean**, with three tabs, plus an **Extract APK
 
 | Step | Where | What |
 |---|---|---|
-| 1.0 release, owner steps | GitHub | add the four signing secrets, merge PR `native-app-v0` into `main`, tag and release `v1.0.0`, set the social preview (see `docs/RELEASE.md`) |
+| GitHub release `v1.0.0` | GitHub | tag on `main`, attach signed `app-release.apk`, delete old `1.2.0` / `v1.1.2` releases (see `docs/RELEASE.md`) |
 | F-Droid | gitlab.com/fdroid/fdroiddata | merge request with `docs/fdroid/io.github.kreza6173pixel.voidapps.yml` |
+| awesome-shizuku | github.com/timschneeb/awesome-shizuku | pull request with the entry in `docs/RELEASE.md` section 5, after the release has an APK |
+| Branch protection | GitHub settings | on `main`: block force push and deletion; no required reviews (single maintainer) |
+| A5 shorthand receivers | this repository | fix described above, then a phone test |
 | In-app About screen | this repository | not built yet; README covers it for 1.0 |
 | Root track (future, owner decides) | see `docs/ROOT_FUTURE.md` | firewall chains, app data backup, private cache cleanup |
 

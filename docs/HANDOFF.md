@@ -1,7 +1,7 @@
 # VOID // APPS: complete project handoff
 
 Updated: 2026-10-05
-Branch: `native-app-v0`
+Branches: `main` (released code), `native-app-v0` (development and testing, kept on purpose)
 Application ID: `io.github.kreza6173pixel.voidapps`
 Reference device: Xiaomi Redmi Note 14, HyperOS Global ROM, Android 16, SDK 36, Shizuku shell uid 2000. The phone is now also rooted (KernelSU); all evidence below was measured with Shizuku as uid 2000.
 
@@ -17,7 +17,7 @@ No INTERNET permission. Commands only through Shizuku and ExecBridge. Validate a
 
 ## Working agreement with the owner
 
-Implement a whole section (code, tests, wiring, strings) before asking for a phone test. The owner tests the section as one unit, then the next section starts. No test requests after single-line changes. When a sub-feature fails on the phone and the owner says skip it, it is recorded here as an open item and left for later.
+Implement a whole section (code, tests, wiring, strings) before asking for a phone test. The owner tests the section as one unit, then the next section starts. No test requests after single-line changes. When a sub-feature fails on the phone and the owner says skip it, it is recorded here as an open item and left for later. New work happens on `native-app-v0` and reaches `main` through a pull request.
 
 ## Status
 
@@ -33,7 +33,7 @@ Implement a whole section (code, tests, wiring, strings) before asking for a pho
 | A6 notifications | partly done | Mute phone-verified; DND access NOT_APPLIED on HyperOS and left open |
 | A7 network | done | Block/unblock and background restrict/allow APPLIED on user, system and protected apps |
 | A8 installer + cleaner | done | Owner phone test: every feature worked, running-apps stop fixed |
-| 1.0 release | files ready | versionCode 100 / 1.0.0, README, fastlane, images, F-Droid draft; owner steps in `docs/RELEASE.md` |
+| 1.0 release | merged | Signing secrets set, CI green with `app-release`, PR #1 merged into `main` (`7dc6cc8`); GitHub release, F-Droid and awesome-shizuku pending, see `docs/RELEASE.md` |
 | Root track | future only | Catalog in `docs/ROOT_FUTURE.md` |
 
 ## Acceptance record
@@ -55,7 +55,7 @@ Implement a whole section (code, tests, wiring, strings) before asking for a pho
 Component control for receivers listed in shorthand form (`pkg/.Cls`) is not reliable in the UI.
 
 - Seen on `com.thirtytwo.steps/.BootReceiver`, `ch.abertschi.adfree/.StartOnBootListener` and `com.eyalm.adns/.services.BootReceiver`.
-- The repository and device agree those components are disabled, but the card still shows Disable. Probable cause: shorthand versus fully qualified comparison.
+- The repository and device agree those components are disabled, but the card still shows Disable. Cause confirmed by code review: `isComponentDisabled()` never expands `pkg/.Cls` to `pkg/pkg.Cls` before comparing (see `docs/PLAN.md`).
 - Both components above are still disabled on the reference phone. Restore with fully qualified `pm enable` commands from the console if needed.
 
 ## A6 open item (left for later by the owner)
@@ -84,20 +84,24 @@ Sources: `pulse-install` (`webui/script.js`, `service.sh`) and `void-purge` (`we
 
 ## Remaining work
 
-1. Owner release steps (`docs/RELEASE.md`): signing secrets, merge PR into `main`, tag `v1.0.0`, F-Droid merge request.
-2. A5 shorthand receiver UI state (optional, owner decides when).
-3. A6 DND access on HyperOS (optional, owner decides when).
-4. In-app About screen (optional).
-5. Root track, only if the owner opens it: `docs/ROOT_FUTURE.md`.
+1. Owner: GitHub release `v1.0.0` on `main` with the signed APK; delete the old `1.2.0` / `v1.1.2` releases.
+2. F-Droid merge request, then the awesome-shizuku pull request (`docs/RELEASE.md` sections 4 and 5).
+3. Owner, by hand: in `.github/workflows/ci.yml` delete the stale first comment line ("Copy this file to ...") and rename the heading `Cyber App Manager build failed` to `VOID // APPS build failed`. The connector cannot write workflow files.
+4. Branch protection on `main` (block force push and deletion only).
+5. A5 shorthand receiver UI state (optional, owner decides when).
+6. A6 DND access on HyperOS (optional, owner decides when).
+7. In-app About screen (optional).
+8. Root track, only if the owner opens it: `docs/ROOT_FUTURE.md`.
 
 ## Release 1.0.0
 
 - `versionCode 100`, `versionName 1.0.0` in `android-app/app/build.gradle.kts`.
-- Store metadata: `fastlane/metadata/android/en-US/` (title, short and full description, changelog `100.txt`, `icon.png`, `featureGraphic.png`, six phone screenshots taken on the reference phone during the A5 to A7 tests, status and navigation bars cropped).
-- `docs/images/social-preview.png` (GitHub social preview) and `docs/images/profile-banner.png`.
+- Store metadata: `fastlane/metadata/android/en-US/` (title, short and full description, changelog `100.txt`, `icon.png`, `featureGraphic.png`, twelve phone screenshots `phoneScreenshots/1.jpg` to `12.jpg` taken on the reference phone).
+- `docs/images/social-preview.png` (GitHub social preview) and `docs/images/profile-banner.png`. Icon, feature graphic and banners are drawn from the launcher vector.
 - `docs/fdroid/io.github.kreza6173pixel.voidapps.yml`: draft for fdroiddata, builds `subdir: android-app/app` from tag `v1.0.0`.
-- `docs/RELEASE.md`: signing secrets (same names as PULSE // BATTERY), merge, tag, F-Droid.
-- The old Shevery WebUI module (Cyber App Manager: root `*.sh`, `module.prop`, `webui/`) and the duplicate `docs/ci.yml` were removed from the tree before release; they remain in git history. F-Droid builds only `android-app/app`.
+- `docs/RELEASE.md`: status table, signing secrets (same names as PULSE // BATTERY), images, merge, tag, F-Droid, awesome-shizuku.
+- The old Shevery WebUI module (Cyber App Manager: root `*.sh`, `module.prop`, `webui/`, `docs/screenshots`) and the duplicate `docs/ci.yml` were removed before release; they remain in git history. F-Droid builds only `android-app/app`.
+- Still named after the old project, on purpose: the Kotlin package `io.github.kreza6173pixel.cyberappmanager` (internal only, the application ID is `voidapps`).
 
 ## Safety decisions
 
@@ -122,5 +126,8 @@ AppOps is separate from runtime permissions. OEM operations are shown but never 
 - `8d28882`: A7 docs and `docs/ROOT_FUTURE.md`.
 - `e6bd37c`, `de0efab`, `3d3c9d1`: A8 installer + cleaner, Install & clean screen, Extract card, 11 unit tests.
 - `ec0a966`: A8 docs.
-- `0d9f6df` 1.0.0 release files (README, CHANGELOG, fastlane text, F-Droid draft, docs/RELEASE.md, versionCode 100 / 1.0.0); then this docs commit. Binary images (icon, featureGraphic, phoneScreenshots, docs/images banners) are uploaded by the owner via GitHub web.
+- `0d9f6df` 1.0.0 release files (README, CHANGELOG, fastlane text, F-Droid draft, docs/RELEASE.md, versionCode 100 / 1.0.0).
 - `ff81867` to `2592350`: pre-release cleanup, old WebUI module, duplicate `docs/ci.yml` and a stray test outside the app module removed; Gradle root project renamed to `void-apps`.
+- `c76a726`: README points to the `.jpg` screenshots; owner uploaded icon, feature graphic, screenshots and banners; `4e00fbe` removed the placeholder from `phoneScreenshots`.
+- `7dc6cc8`: PR #1 merged into `main` (CI #189 green).
+- Then the final release-status docs (RELEASE, PLAN, HANDOFF), merged with PR #2.
