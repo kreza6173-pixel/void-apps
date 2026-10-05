@@ -86,11 +86,12 @@ Sources: `pulse-install` (`webui/script.js`, `service.sh`) and `void-purge` (`we
 
 1. Owner: GitHub release `v1.0.0` on `main` with the signed APK; delete the old `1.2.0` / `v1.1.2` releases.
 2. F-Droid merge request, then the awesome-shizuku pull request (`docs/RELEASE.md` sections 4 and 5).
-3. Branch protection on `main` (block force push and deletion only).
-4. A5 shorthand receiver UI state (optional, owner decides when).
-5. A6 DND access on HyperOS (optional, owner decides when).
-6. In-app About screen (optional).
-7. Root track, only if the owner opens it: `docs/ROOT_FUTURE.md`.
+3. Owner, by hand: in `.github/workflows/ci.yml` delete the stale first comment line ("Copy this file to ...") and rename the heading `Cyber App Manager build failed` to `VOID // APPS build failed`. The connector cannot write workflow files.
+4. Branch protection on `main` (block force push and deletion only).
+5. A5 shorthand receiver UI state (optional, owner decides when).
+6. A6 DND access on HyperOS (optional, owner decides when).
+7. In-app About screen (optional).
+8. Root track, only if the owner opens it: `docs/ROOT_FUTURE.md`.
 
 ## Release 1.0.0
 
@@ -100,7 +101,7 @@ Sources: `pulse-install` (`webui/script.js`, `service.sh`) and `void-purge` (`we
 - `docs/fdroid/io.github.kreza6173pixel.voidapps.yml`: draft for fdroiddata, builds `subdir: android-app/app` from tag `v1.0.0`.
 - `docs/RELEASE.md`: status table, signing secrets (same names as PULSE // BATTERY), images, merge, tag, F-Droid, awesome-shizuku.
 - The old Shevery WebUI module (Cyber App Manager: root `*.sh`, `module.prop`, `webui/`, `docs/screenshots`) and the duplicate `docs/ci.yml` were removed before release; they remain in git history. F-Droid builds only `android-app/app`.
-- Still named after the old project, on purpose: the Kotlin package `io.github.kreza6173pixel.cyberappmanager` (internal only, the application ID is `voidapps`). The CI failure-summary heading was renamed by the owner.
+- Still named after the old project, on purpose: the Kotlin package `io.github.kreza6173pixel.cyberappmanager` (internal only, the application ID is `voidapps`).
 
 ## Safety decisions
 
