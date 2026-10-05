@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Platform theme: no com.google.android.material dependency, so Theme.Material3.* is
+         unavailable at link time. Colours are handled in Compose (CyberAppManagerTheme). -->
+    <style name="Theme.CyberAppManager" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/cam_bg</item>
+        <item name="android:statusBarColor">@color/cam_bg</item>
+        <item name="android:navigationBarColor">@color/cam_bg</item>
+    </style>
+</resources>

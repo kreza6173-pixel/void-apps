@@ -1,0 +1,33 @@
+# Same pinned toolchain as PULSE // BATTERY (proven green on CI and on the device):
+# compileSdk 36 / AGP 8.13.1 / Kotlin 2.2.21 / Gradle 8.13 / Compose BOM 2025.12.00.
+# Source: https://github.com/android/compose-samples/blob/v2025.12.00/Jetchat/gradle/libs.versions.toml
+[versions]
+agp = "8.13.1"
+kotlin = "2.2.21"
+composeBom = "2025.12.00"
+activityCompose = "1.12.1"
+lifecycleRuntimeKtx = "2.10.0"
+coreSplashscreen = "1.2.0"
+# Shizuku client library 13.1.5, verified against Maven Central metadata for PULSE.
+shizuku = "13.1.5"
+junit = "4.13.2"
+
+[libraries]
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
+shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+# AGP 8.x needs the standalone Kotlin Android plugin; Kotlin 2.x additionally
+# requires the separate Compose compiler plugin.
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

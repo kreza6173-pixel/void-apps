@@ -1,0 +1,33 @@
+<p><b>VOID // APPS</b> is an Android app manager that runs every command through <a href="https://shizuku.rikka.app/">Shizuku</a> as the shell user. No root is needed, and the app has no internet permission.</p>
+
+<p>Every change is read back from Android before it is reported. A result is shown as <i>applied</i> only when the new state really matches; otherwise you see <i>not applied</i>, <i>unverifiable</i>, <i>refused</i> or <i>failed</i>, together with the exact command and its output.</p>
+
+<p><b>Apps</b></p>
+<ul>
+<li>Full package list with search and filters (user, system, disabled, suspended, removed, protected).</li>
+<li>Suspend, disable, force stop, remove for the current user, restore, clear data.</li>
+<li>Snapshots before risky changes, undo, JSON import and export, pins, batch actions.</li>
+</ul>
+
+<p><b>Debloat</b>: presets built from a package knowledge base with risk labels, a review screen and one snapshot per batch.</p>
+
+<p><b>Per-app controls</b></p>
+<ul>
+<li>Runtime permissions and AppOps, with uid and package scope shown separately.</li>
+<li>Boot receivers (autostart) and background execution state.</li>
+<li>Notification mute, notification listener access, Do Not Disturb access.</li>
+<li>Full network block (Android 11+ Chain 3) and background data restriction.</li>
+<li>Extract the installed APK files or one .xapk.</li>
+</ul>
+
+<p><b>Install &amp; clean</b></p>
+<ul>
+<li>Install APK, APKS and XAPK (with OBB) from a built-in folder browser, streamed into an install session. Inspect a file first: package, version, SDK, ABIs, permissions, SHA-256.</li>
+<li>Trim all app caches, remove empty folders, list running apps and stop them with verification.</li>
+</ul>
+
+<p><b>Safety</b>: the framework, System UI, Shizuku, the current launcher, keyboard, dialer, SMS app and WebView are protected and refused in the code, not only hidden in the UI. Labels and presets are guidance, not a guarantee.</p>
+
+<p><b>Requires</b>: Android 8.0 or newer and Shizuku running (wireless debugging, ADB or root). Tested on a Xiaomi Redmi Note 14 with HyperOS (Android 16). Some OEM ROMs ignore certain commands; the app then says so instead of pretending.</p>
+
+<p>Open source, MIT licensed. No ads, no trackers, no account.</p>

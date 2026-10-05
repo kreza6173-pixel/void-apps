@@ -1,0 +1,7 @@
+First native release (1.0.0).
+- App list, suspend/disable/remove/restore/clear data with read-back
+- Snapshots, undo, pins, batch actions, debloat presets
+- Permissions, AppOps, autostart, notifications, network block
+- Installer for APK, APKS, XAPK with OBB; APK extract
+- Cache trim, empty folders, running apps
+No root, no internet permission.

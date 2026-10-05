@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_shared_system">Shared system uid %1$s (%2$d). Runtime permissions belong to the whole shared uid, so Grant and Revoke are refused for this app.</string>
+    <string name="permission_shared_app">Shared uid %1$s (%2$d). Grant or Revoke applies to every package in this shared uid.</string>
+</resources>

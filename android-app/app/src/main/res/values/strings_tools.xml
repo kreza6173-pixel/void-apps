@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_open_tools">Install &amp; clean</string>
+    <string name="tools_title">Install &amp; clean</string>
+    <string name="tools_tab_install">Install</string>
+    <string name="tools_tab_clean">Clean</string>
+    <string name="tools_tab_running">Running</string>
+
+    <string name="inst_note">APK, APKS and XAPK (with OBB). Files are read by the shell and streamed into an install session, so no storage permission is needed. Package and version are read back from Android after every install. APKM is not supported.</string>
+    <string name="inst_unzip_ok">unzip available: APKS and XAPK supported</string>
+    <string name="inst_unzip_missing">unzip is not available on this phone: only plain APK files can be installed.</string>
+    <string name="inst_path">Folder</string>
+    <string name="inst_go">Go</string>
+    <string name="inst_up">Up</string>
+    <string name="inst_empty_dir">This folder is empty.</string>
+    <string name="inst_more_rows">%1$d more not shown</string>
+    <string name="inst_browse_error">Cannot open this folder: %1$s</string>
+    <string name="inst_inspect">Inspect</string>
+    <string name="inst_options">Install options</string>
+    <string name="inst_opt_replace">Replace existing app (-r)</string>
+    <string name="inst_opt_grant">Grant all runtime permissions (-g)</string>
+    <string name="inst_opt_delete">Delete the file after a confirmed install</string>
+    <string name="inst_opt_split">Install the %1$d selected APKs as ONE app (base + splits)</string>
+    <string name="inst_install_selected">Install selected (%1$d)</string>
+    <string name="inst_auto_scan">Scan auto-install folder now</string>
+    <string name="inst_working">Working: %1$s</string>
+    <string name="inst_history">History (this phone only)</string>
+    <string name="inst_history_empty">No installs yet.</string>
+    <string name="inst_history_clear">Clear history</string>
+    <string name="inst_confirm_title">Install these files?</string>
+    <string name="inst_confirm_body">%1$d file(s):\n%2$s\n\nEach one is installed in its own session and checked against Android afterwards.</string>
+    <string name="inst_auto_title">Install everything in the auto folder?</string>
+    <string name="inst_auto_body">Every APK, APKS and XAPK in %1$s is installed. Files confirmed installed are moved to installed/.</string>
+    <string name="inst_inspect_title">Inspect</string>
+    <string name="inst_inspect_error">Cannot inspect: %1$s</string>
+    <string name="inst_f_file">File</string>
+    <string name="inst_f_package">Package</string>
+    <string name="inst_f_label">Label</string>
+    <string name="inst_f_version">Version in file</string>
+    <string name="inst_f_sdk">min / target SDK</string>
+    <string name="inst_f_installed">Installed now</string>
+    <string name="inst_f_abis">Native ABIs</string>
+    <string name="inst_f_apks">APK files in bundle</string>
+    <string name="inst_f_launchable">Has a launcher icon</string>
+    <string name="inst_f_perms">Permissions (%1$d)</string>
+    <string name="inst_not_installed">not installed</string>
+    <string name="inst_abi_none">none (pure Java/Kotlin)</string>
+    <string name="inst_downgrade_warn">The file is OLDER than the installed version. Android will refuse it without a downgrade.</string>
+    <string name="inst_yes">yes</string>
+    <string name="inst_no">no</string>
+
+    <string name="ext_title">Extract APK</string>
+    <string name="ext_note">Copies the installed APK files to %1$s. The app is not changed.</string>
+    <string name="ext_apks">APK files</string>
+    <string name="ext_xapk">One .xapk</string>
+
+    <string name="clean_note">From VOID // PURGE: cache trim, empty folders and running apps. No root.</string>
+    <string name="clean_cache_title">App cache cleanup</string>
+    <string name="clean_cache_note">Android trims the cache of every app itself (pm trim-caches). App data is not touched. Free space on /data is measured before and after.</string>
+    <string name="clean_cache_run">Trim all app caches</string>
+    <string name="clean_cache_body">Android will clear app caches to free space. Apps keep their data and logins, they only rebuild their cache.</string>
+    <string name="clean_freed">freed %1$s</string>
+    <string name="clean_empty_title">Empty folders</string>
+    <string name="clean_empty_note">Only folders that are empty right now. Removed with rmdir, so a folder that got files in the meantime is kept. /sdcard itself cannot be scanned; pick a folder inside it.</string>
+    <string name="clean_empty_scan">Scan for empty folders</string>
+    <string name="clean_empty_found">%1$d empty folder(s)</string>
+    <string name="clean_empty_capped">(first 2000 only)</string>
+    <string name="clean_empty_delete">Delete selected (%1$d)</string>
+    <string name="clean_empty_confirm_title">Delete empty folders?</string>
+    <string name="clean_empty_confirm_body">%1$d empty folder(s) inside %2$s will be removed. Folders that are no longer empty are kept.</string>
+    <string name="clean_empty_result">Removed %1$d, kept %2$d (checked on the phone after deleting)</string>
+    <string name="clean_empty_rescan">Parent folders that became empty show up on the next scan.</string>
+
+    <string name="run_note">Third-party apps with a live process right now (read from ps). Stop uses am force-stop, then the process list is read again. Protected apps (this app, Shizuku, launcher, keyboard, dialer, SMS, WebView) cannot be stopped.</string>
+    <string name="run_refresh">Refresh</string>
+    <string name="run_select_all">Select all</string>
+    <string name="run_found">%1$d running app(s), from %2$s</string>
+    <string name="run_pids">pid %1$s \u00b7 %2$d process(es)</string>
+    <string name="run_protected">protected: %1$s</string>
+    <string name="run_stop_selected">Stop selected (%1$d)</string>
+    <string name="run_confirm_title">Stop these apps?</string>
+    <string name="run_confirm_body">%1$d app(s) will be force-stopped:\n%2$s\n\nUnsaved work in them is lost. Some apps start again by themselves; that is reported.</string>
+    <string name="run_result_title">Stop result</string>
+</resources>

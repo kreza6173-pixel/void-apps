@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_title">Notifications and access</string>
+    <string name="notif_note">Mute revokes POST_NOTIFICATIONS and is read back from Permissions. Listener and Do Not Disturb access are read back from Android settings. Protected apps are refused.</string>
+    <string name="notif_loading">Reading notification access…</string>
+    <string name="notif_error">Notification access unavailable: %1$s</string>
+    <string name="notif_post_title">Posting notifications</string>
+    <string name="notif_post_allowed">Allowed</string>
+    <string name="notif_post_muted">Muted (POST_NOTIFICATIONS not granted)</string>
+    <string name="notif_post_unknown">State unknown</string>
+    <string name="notif_post_na">Not applicable: this app does not request POST_NOTIFICATIONS.</string>
+    <string name="notif_post_fixed">Fixed by system or policy, so it cannot be changed here.</string>
+    <string name="notif_mute">Mute</string>
+    <string name="notif_unmute">Allow</string>
+    <string name="notif_listener_title">Notification listener access</string>
+    <string name="notif_listener_none">This app declares no notification listener service.</string>
+    <string name="notif_listener_unknown">Listener access could not be read on this ROM. Changes are disabled.</string>
+    <string name="notif_granted">granted</string>
+    <string name="notif_not_granted">not granted</string>
+    <string name="notif_allow">Allow</string>
+    <string name="notif_revoke">Revoke</string>
+    <string name="notif_dnd_title">Do Not Disturb access</string>
+    <string name="notif_dnd_granted">Granted</string>
+    <string name="notif_dnd_not_granted">Not granted</string>
+    <string name="notif_dnd_not_requested">Not requested by this app</string>
+    <string name="notif_dnd_unknown">Do Not Disturb access could not be read on this ROM.</string>
+    <string name="notif_raw_show">Show raw output</string>
+    <string name="notif_raw_hide">Hide raw output</string>
+    <string name="notif_listener_allow_title">Allow notification access?</string>
+    <string name="notif_listener_allow_body">%1$s will be able to read every notification on this phone, including messages and one-time codes. Only allow apps you trust.</string>
+    <string name="notif_listener_revoke_title">Revoke notification access?</string>
+    <string name="notif_listener_revoke_body">%1$s will no longer be able to read notifications. Features that rely on it may stop working.</string>
+    <string name="notif_dnd_allow_title">Allow Do Not Disturb access?</string>
+    <string name="notif_dnd_allow_body">%1$s will be able to turn Do Not Disturb on and off and change its rules.</string>
+    <string name="notif_dnd_revoke_title">Revoke Do Not Disturb access?</string>
+    <string name="notif_dnd_revoke_body">%1$s will no longer be able to change Do Not Disturb. Android may also remove the rules this app created.</string>
+    <string name="notif_silently_kept">Android returned success but the setting did not change. The system silently ignored this change.</string>
+</resources>

@@ -1,120 +1,131 @@
-# Cyber App Manager
+# VOID // APPS
 
-**A cyberpunk-themed Android package manager — built as a [Shevery](https://github.com/HmnDev-Tech/shevery) ADB module.**
+**An Android app manager that runs through Shizuku, without root, and refuses to guess.**
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-00d4ff)
 ![Android 8+](https://img.shields.io/badge/Android-8%2B-00ff88)
-![Root optional](https://img.shields.io/badge/root-not%20required-ff00aa)
+![No root](https://img.shields.io/badge/root-not%20required-ff00aa)
+![No internet](https://img.shields.io/badge/INTERNET-not%20requested-ff00aa)
 
-Freeze, restore, remove and inspect any package — system or user — without root, using `pm` and `am` through Shizuku/ADB. Snapshots, undo, pinned auto re-freeze, debloat presets built from a community knowledge base, per-app details (permissions, background limits, standby bucket), a data-usage view, and an optional AI advisor that explains packages and proposes changes you approve one by one.
+![VOID // APPS](fastlane/metadata/android/en-US/images/featureGraphic.png)
+
+VOID // APPS is a native Kotlin + Jetpack Compose app. Every action is a shell command sent through the [Shizuku](https://shizuku.rikka.app/) UserService as the shell user (uid 2000). After each change it asks Android again and only then reports the result:
+
+| Verdict | Meaning |
+|---|---|
+| **applied** | the read-back shows the new state |
+| **not applied** | the command ran (often with exit 0) but Android kept the old state |
+| **unverifiable** | Android offers no way to read this change back |
+| **refused** | blocked by the app's own guard, nothing was run |
+| **failed** | the command could not run |
+
+The exact command, its output and the before/after state are always one tap away, with Copy and Share.
 
 <table>
   <tr>
-    <td width="33%"><img src="docs/screenshots/apps-registry.jpg" alt="Cyber App Manager package registry" width="100%"></td>
-    <td width="33%"><img src="docs/screenshots/debloat-tab.jpg" alt="Cyber App Manager debloat presets" width="100%"></td>
-    <td width="33%"><img src="docs/screenshots/vault-tab.jpg" alt="Cyber App Manager vault: snapshots and pins" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" alt="App list with filters" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" alt="App details and permissions" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" alt="AppOps with uid and package scope" width="100%"></td>
   </tr>
   <tr>
-    <td width="33%"><img src="docs/screenshots/usage-tab.jpg" alt="Cyber App Manager data usage" width="100%"></td>
-    <td width="33%"><img src="docs/screenshots/ai-advisor.jpg" alt="Cyber App Manager AI advisor provider setup" width="100%"></td>
-    <td width="33%"><img src="docs/screenshots/advisor-privacy.jpg" alt="Cyber App Manager AI advisor privacy controls" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" alt="Autostart and notifications" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg" alt="Network block and APK extract" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.jpg" alt="Debloat presets" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/7.jpg" alt="Debloat review" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/8.jpg" alt="Snapshots" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/9.jpg" alt="Pinned packages" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/10.jpg" alt="Installer" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/11.jpg" alt="Self-check" width="100%"></td>
+    <td width="33%"><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/12.jpg" alt="Console" width="100%"></td>
   </tr>
 </table>
 
-## Features
+## What it does
 
-- 🧊 **Freeze / unfreeze / force-stop / remove / restore** any package for the current user, with a live registry (search, filters, risk tag, sort)
-- 📚 **Knowledge base** of common Android, Google, Xiaomi/HyperOS, Samsung and OEM packages — friendly names, categories and a safe/caution/core risk tag, plus heuristics for anything not in the table
-- 🧹 **Debloat presets** (Google extras, Facebook stubs, telemetry, Xiaomi extras, Samsung extras, AOSP leftovers, and a knowledge-base-wide "known-safe" list) — review before freezing, or freeze in one tap
-- 💾 **Snapshots & undo** — save the full package state, diff it against now, restore just the differences, export/import as JSON; every batch is auto-snapshotted and the last 10 batches can be undone from a toast or the Vault tab
-- 📌 **Pinned freeze** — pin a package so it is frozen again automatically whenever Shevery starts a session (`service.sh`) or after it gets re-enabled by an update
-- 🔎 **Per-app detail sheet** — version, installer, install/update dates, runtime permissions (grant/revoke), background-activity restriction, app standby bucket
-- 📊 **Data usage** — since boot, last 24 h, all recorded history or since the last full charge, split into mobile / Wi-Fi / VPN-tunnel traffic, aggregated on-device from `dumpsys netstats`
-- 🤖 **Optional AI advisor** — bring your own API key (OpenAI, Anthropic Claude, Google Gemini, DeepSeek, Mistral, xAI, or any OpenAI-compatible/local endpoint); explains packages and proposes actions you approve one by one
-- 🛡️ **Guarded by design** — core Android/Google components, resource overlays and the current launcher, keyboard, dialer and SMS app are detected live and can never be frozen, stopped, removed or have permissions touched, even by the AI or an imported snapshot
-- 🖥️ **Shell bridge console** — every command sent to the device, with copy/clear
+**Apps**
+- Full package list for user 0 with search and filters: user, system, disabled, suspended, removed, protected.
+- Suspend / unsuspend, disable / enable, force stop, remove for this user, restore (`pm install-existing`, also for packages another manager removed), clear data.
+- Snapshots before risky changes, restore with per-package read-back (undo), JSON import and export, pinned packages, batch actions with one snapshot per batch.
 
-## Requirements
+**Debloat**
+- Presets built from a package knowledge base with Safe / Caution / Core labels, a review screen, search, and a disclaimer that says what it is: guidance tested on one phone, not a guarantee.
 
-- [Shevery](https://github.com/HmnDev-Tech/shevery) with Shizuku (ADB or root mode)
-- Android 8+ (uses `pm disable-user` / `pm enable`, standard since Android 8)
-- Root is not required for any feature of this module
+**Per-app cards in app details**
+- **Permissions**: runtime grant / revoke checked with `pm check-permission`; install-time and fixed permissions shown read-only; shared system uid refused.
+- **AppOps**: uid and package scope shown separately; package-scope changes only where no uid mode overrides them; OEM `MIUIOP(n)` modes shown but never written.
+- **Autostart**: boot receivers from the Receiver Resolver Table, background execution ops, component disable / enable.
+- **Notifications**: mute (POST_NOTIFICATIONS), notification listener access, Do Not Disturb access.
+- **Network**: full block through Android 11+ Chain 3 (`cmd connectivity set-package-networking-enabled`), background data through `netpolicy`, shared-uid warning.
+- **Extract**: copy the installed base and split APKs, or build one `.xapk`.
 
-## Installation
+**Install & clean**
+- Installer for APK, APKS and XAPK with OBB. The shell reads the file from `/sdcard` and streams it into a `pm install-create` session, so the app needs no storage permission. Inspect shows package, version, SDK, ABIs, launcher entry, permissions, SHA-256 and the installed version (with a downgrade warning). A built-in binary-manifest reader gives the package name, which is how an install is verified. Auto-install folder and local history included. APKM is not supported.
+- Trim all app caches (free space measured before and after), remove empty folders (`rmdir` only), list apps with live processes and stop them with a fresh process check afterwards.
 
-1. Download the latest release ZIP.
-2. In Shevery, open **ADB Modules → Install ZIP** and select the file.
-3. Set the module access mode to **Full access**, or enable **WebUI shell bridge** in Custom mode.
-4. Open the module's WebUI.
-
-## Usage
-
-| Tab | Purpose |
-|---|---|
-| **Apps** | Search, filter and sort the full package registry; select packages and freeze, unfreeze, force-stop, remove, restore or pin them in a batch |
-| **Debloat** | Ready-made presets built from the knowledge base; review the selection before freezing |
-| **Vault** | Snapshots (save/diff/restore/export/import), pinned packages, recent undoable batches, and module settings |
-| **Usage** | Per-app data usage for a chosen range, split into mobile / Wi-Fi / VPN traffic |
-| **AI Advisor** | Chat with your provider of choice about your packages (optional) |
-
-Tapping the **i** button on any package opens its detail sheet: version, installer, permissions, background limits and standby bucket. The **AI** button asks the advisor about that specific package.
-
-The module also ships a quick action (`action.sh`, tap the module card → Action) that prints a status summary and re-applies pinned freezes without opening the WebUI.
-
-## AI Advisor
-
-The advisor is disabled until you add your own API key in the **AI Advisor** tab. Nothing is sent to any provider before you send a message.
-
-- **Providers** — OpenAI, Anthropic (Claude), Google Gemini, DeepSeek, Mistral, xAI, and a *Custom* option for any OpenAI-compatible base URL (Ollama, LM Studio, OpenRouter, your own proxy). **Fetch** lists the models available to your key.
-- **You control what is shared** — device status, frozen/removed packages, the current selection and the last diagnostic are shared by default; the full package list, running apps and data usage are opt-in. **Preview what will be sent** shows the exact context text.
-- **Proposals, not commands** — the advisor can suggest freezing, unfreezing, force-stopping, removing, restoring, pinning, restricting background activity, or saving a note about a package. Nothing runs until you tap **Apply**, and destructive actions still ask for confirmation (typed confirmation for removal).
-- **Local validation** — every proposal is re-checked before it can run: the package must exist and not be core, an overlay, or the current launcher/keyboard/dialer/SMS app. Notes are clearly labelled as unverified AI output in the detail sheet.
-- **Key storage** — keys are kept in this WebUI's local storage only. Untick *remember key* to keep a key for the current session, or use *Forget all keys* to remove them.
-
-Requests are sent directly from the WebUI to the provider you choose. OpenAI, Anthropic and Gemini accept direct browser calls; for providers that do not, use the *Custom* option with a proxy.
-
-> **Internet access:** Shevery blocks network access inside module WebUIs by default. To use the advisor, long-press the Cyber App Manager card in Shevery and tap **Trust**, then reopen the module.
+**Also**: a read-only Self-check for whole package groups, a ROM report template, and a console with read-only quick commands.
 
 ## Safety model
 
-| Layer | Reversibility | Gate |
+- One guard for the whole app (`inventory/ProtectedPackages.kt`). Framework, System UI, Settings, phone and telecom, package installers, permission controller, network stack, Shizuku, the current launcher, keyboard, default dialer, default SMS app and WebView provider are refused **in the repository layer**, not only hidden in the UI.
+- Package and component names are validated and every argument is shell-quoted.
+- No INTERNET permission. Nothing leaves the phone.
+- ExecBridge caps output at 64 KiB; parsers are measured on the phone and a truncated read is treated as "unknown", never as a state.
+- A write button appears only where a phone test showed Android really accepts that change.
+
+## Honest limits
+
+- Tested on **one** reference phone: Xiaomi Redmi Note 14, HyperOS Global, Android 16 (SDK 36), Shizuku as uid 2000. Other ROMs can and will differ; the verdicts are built to show that instead of hiding it.
+- **Open:** boot receivers listed in shorthand form (`pkg/.Cls`): the device state changes, but the card's button state does not follow yet. See `docs/PLAN.md`.
+- **Open:** Do Not Disturb access on HyperOS: `cmd notification allow_dnd` exits 0 and changes nothing. The app reports *not applied*.
+- Chain 3 network blocks may not survive a reboot on every ROM.
+- Root-only ideas (iptables firewall, app data backup, private cache cleanup) are documented in `docs/ROOT_FUTURE.md`, not implemented.
+
+## Requirements and install
+
+- Android 8.0 or newer.
+- [Shizuku](https://shizuku.rikka.app/) running, through wireless debugging, ADB or root.
+- Install the APK from Releases (or F-Droid once published), open it, grant the Shizuku permission.
+
+## Build
+
+```sh
+cd android-app
+gradle :app:testDebugUnitTest :app:assembleDebug
+```
+
+JDK 17, Android SDK 36, Gradle 8.13. CI (`.github/workflows/ci.yml`) runs unit tests, lint and the debug build on every push, and a signed release build when the signing secrets exist (see `docs/RELEASE.md`).
+
+## How it was built
+
+The repository started on 2026-08-26 as **Cyber App Manager**, a WebUI module for Shevery. That module was removed from the tree before 1.0.0 and only remains in the git history. The native app was built on the branch `native-app-v0` between **2026-10-02 and 2026-10-05**: 127 commits up to the A8 docs, plus the release commits, 106 of them native-only. Every section was tested on the reference phone as one unit before the next one started. The commit history is left as it happened, including mistakes.
+
+| Phase | Commits | What was hard |
 |---|---|---|
-| Freeze / unfreeze | Instant toggle, auto-snapshotted | confirmation (destructive-style for freeze) |
-| Force-stop | Instant | none |
-| Remove (system app) | Recoverable with Restore | confirmation |
-| Remove (user app) | Not reversible — data is lost | typed confirmation |
-| Permission grant/revoke, background restriction, standby bucket | Instant toggle from the detail sheet | guard check |
-| AI-proposed actions | Same as above | explicit **Apply** tap + local validation, on top of the manager's own confirmations |
+| **M0** core | `15eab39`, `f8e4afb`, `9231718`, `3f1020b`, `7848431`, `cca986b` | Build setup, Shizuku runtime and exec core taken over from PULSE // BATTERY. A Shizuku UserService is not an Android Service: it is a binder the Shizuku server creates by reflection, and the bind gives no error when it fails, so the bridge got its own bind log and watchdog. The CI workflow had to be created by hand because the connector cannot write workflow files. |
+| **A1** inventory | `8c73166` | The phone printed dates in Persian digits, `cmd role` and the WebView provider query were unknown on HyperOS, and the 64 KiB output cap forced each package list into its own call. Role detection moved to public app APIs. |
+| **A2** operations | `2e41051`, `f0b9553`, `5c72a7d`, `f287cfb`, `d8cf9d4` | HyperOS rejects `disable-user` for some system packages; clear data has no read-back and is reported as unverifiable. Two red CI runs before the compile-clean fix. |
+| **A3** snapshots, undo, pins, batch | `fdb607e` to `6b3d093` (32 commits) | A pure, testable planner first, then snapshot and pin storage outside app-private data, MediaStore quirks, refresh from package manager read-back, deduplication of rapid snapshots, one snapshot per batch. |
+| **Debloat** | `9e8628c`, `4acaa96`, `c8d7dab`, `a9d19f0` | Presets from the knowledge base, review, restore of packages removed by other managers. |
+| **A4** permissions, AppOps | `c86a46c` to `077746a` (28 commits) | The hardest section. A Drive dump was 128,886 bytes, system blocks over 100 KiB, all above the cap, so sections are now extracted on the phone first. AppOps lines had prefixes, OEM `MIUIOP` modes, duplicate modes, hidden Packages blocks and shared uids. HyperOS silently kept CAMERA and CALL_PHONE uid-scope changes, so uid-scope writes were turned off and the Self-check was added (311 of 311 system packages clean). |
+| **A5** autostart | `07ccf3b`, `84ad3c9`, `91082cb`, `a070171`, `eed9ff5`, `f82f0fb`, `f3c8266` | 14 commits after `077746a` (`0615a61` to `0c93159`, CI #72 to #85) came from a broken AI session and were replaced by a clean rebuild in `07ccf3b`. Then: `pm disable` silently ignored shorthand names (fixed by expanding them), and several read-back attempts failed on the HyperOS dump before an exact `awk` read of the disabled-components block worked. The shorthand UI state is still open. |
+| **A6** notifications | `21f03bb`, `b0350d5`, `3b89063` | Ported from the void-pulse module. Mute verified; DND access is silently ignored by HyperOS and reported as such. |
+| **A7** network | `f1d5241`, `8d28882` | Ported from the VOID-WALL module. VOID-WALL kept its own list of blocked apps because it had no read-back; here the state is read from Android (`get-package-networking-enabled`). Its netpolicy parser only took the first uid per line; fixed. Verified on user, system and protected apps. |
+| **A8** install & clean | `e6bd37c`, `de0efab`, `3d3c9d1`, `ec0a966` | Ported from pulse-install and void-purge. The binary manifest is gzip-compressed on the phone so it fits under the cap. void-purge's "kill background apps" never listed anything: it force-stopped every user app in a background subshell with output thrown away. Rebuilt on `ps` with a per-app check. CI #98 was red only because the commit was half of a two-part push; #99 to #101 are green. |
 
-Core Android/Google components and resource overlays are refused by a static list; the current launcher, keyboard, default dialer and default SMS app are detected live on every scan and refused dynamically, so the check still holds after you change any of them.
+Detailed evidence for every phase is in `docs/HANDOFF.md`; the roadmap and open items in `docs/PLAN.md`.
 
-## Repository layout
+## Credits
 
-```
-module.prop         Module metadata
-action.sh            Status summary + re-applies pinned freezes
-service.sh           Re-applies pinned freezes once per Shizuku session
-appctl.sh            Single-package control for scripting (freeze/unfreeze/force-stop/remove/restore/clear-data)
-snapshot.sh          Snapshot save/list/show/diff/restore/delete from the command line
-lib.sh               Shared shell helpers (guard, current_states, cam_op, enforce_pinned)
-webui/index.html     Interface
-webui/style.css      Theme
-webui/script.js      Core engine: bridge, registry, guard, ops, snapshots, pins, usage, detail sheet
-webui/kb.js          Package knowledge base and debloat presets
-webui/ai.js          Optional AI advisor
-docs/screenshots/    Images used in this README
-```
-
-Snapshots, pins and logs are stored at `/data/local/tmp/cyber-app-manager` on the device, shared between the WebUI and the shell scripts.
-
-## Contributing
-
-Issues and pull requests are welcome, including additions to the package knowledge base. Please keep new destructive actions behind a confirmation, keep the guard checks in `lib.sh` and `webui/script.js` in sync, and never allow a core package, overlay, or the live launcher/keyboard/dialer/SMS app to be frozen, stopped or removed.
+Commands and behaviour were ported from the author's own phone-tested Shevery modules: [VOID-WALL](https://github.com/kreza6173-pixel/VOID-WALL), [void-pulse](https://github.com/kreza6173-pixel/void-pulse), [void-autostart](https://github.com/kreza6173-pixel/void-autostart), [pulse-install](https://github.com/kreza6173-pixel/pulse-install) and [void-purge](https://github.com/kreza6173-pixel/void-purge). Build and Shizuku core from [PULSE // BATTERY](https://github.com/kreza6173-pixel/pulse-battery). Built on [Shizuku](https://github.com/RikkaApps/Shizuku) by RikkaApps.
 
 ## Disclaimer
 
-Freezing or removing the wrong package can break features of your phone, including ones this module cannot detect (a poorly documented OEM dependency, for instance). Risk tags come from a community knowledge base and heuristics, not a guarantee. Snapshots make this reversible for anything the module itself changed — use them.
+Disabling or removing the wrong package can break features of your phone, including ones no tool can detect. Labels and presets are guidance from one tested phone, not a guarantee. Snapshots make changes made by this app reversible; use them.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).

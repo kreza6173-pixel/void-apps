@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_open_selfcheck">Self-check</string>
+    <string name="selfcheck_title">Self-check</string>
+    <string name="selfcheck_intro">Reads the permission and AppOps state of every package in the chosen group and reports what VOID could not read or understand. Nothing is changed. A large group takes several minutes; Stop keeps the partial report. Leaving this screen stops the check.</string>
+    <string name="selfcheck_rom_note">Results depend on the device and the ROM. Vendor system apps (for example Security on Xiaomi HyperOS or MIUI, or Samsung and other OEM apps) behave differently on every device, and some changes are silently refused by the platform. If this report shows errors or unrecognised lines, or a change is refused on your device, please open a GitHub issue with the report so the parser and guards can be adapted to your ROM.</string>
+    <string name="selfcheck_scope_user">User apps</string>
+    <string name="selfcheck_scope_system">System apps</string>
+    <string name="selfcheck_scope_all">All apps</string>
+    <string name="selfcheck_start">Start self-check</string>
+    <string name="selfcheck_stop">Stop</string>
+    <string name="selfcheck_progress">Checked %1$d of %2$d</string>
+    <string name="selfcheck_partial">Stopped early: this report covers only the packages checked so far.</string>
+    <string name="selfcheck_summary">Checked: %1$d. Permission errors: %2$d (64 KiB cap: %3$d). No permission state: %4$d. AppOps errors: %5$d. AppOps not split: %6$d. Unrecognised AppOps lines: %7$d.</string>
+    <string name="selfcheck_no_issues">No problems found in this group.</string>
+    <string name="selfcheck_issue_hint">Share this report in a GitHub issue (template: Device / ROM report) so VOID can be adapted to your device and ROM:</string>
+    <string name="selfcheck_issue_url" translatable="false">https://github.com/kreza6173-pixel/void-apps/issues</string>
+</resources>

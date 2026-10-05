@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appops_title">AppOps</string>
+    <string name="appops_loading">Reading AppOps state…</string>
+    <string name="appops_error">AppOps state unavailable on this ROM.</string>
+    <string name="appops_empty">Android reported no AppOps entries for this package.</string>
+    <string name="appops_read_only">AppOps are separate from manifest permissions. uid is the mode set for the app uid, package is the mode set for this package. A uid mode takes precedence and follows the runtime permission state, so it is changed with Grant or Revoke in Permissions, not here. Change is offered only for package modes that are not overridden by a uid mode. Every change is read back from Android. Protected apps, apps on a system uid (below 10000) and OEM operations such as MIUIOP(n) are refused. If the output cannot be split into uid and package scope, every reported mode is listed and changes are disabled. AppOps changes are not part of snapshots; the result card shows the previous mode.</string>
+    <string name="appops_raw_show">Show raw appops output</string>
+    <string name="appops_raw_hide">Hide raw output</string>
+    <string name="appop_change">Change</string>
+    <string name="appop_change_title">Change %1$s</string>
+    <string name="appop_scope_label">Scope</string>
+    <string name="appop_scope_package">Package (this app only)</string>
+    <string name="appop_scope_uid_unsupported">Uid (disabled: this ROM silently ignored uid changes)</string>
+    <string name="appop_mode_label">Mode</string>
+    <string name="appop_change_note">default hands control back to the normal permission state. The new mode is read back from Android and is reported applied only if it matches.</string>
+    <string name="appop_result_format">AppOp %1$s (%2$s) to %3$s: %4$s</string>
+    <string name="appop_silently_kept">Android returned success but kept the previous mode. The system silently ignored this change.</string>
+</resources>

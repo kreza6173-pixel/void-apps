@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Single-colour layer for themed icons (Android 13+). The system tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:pathData="M34,30 L46,30 A4,4 0 0 1 50,34 L50,46 A4,4 0 0 1 46,50 L34,50 A4,4 0 0 1 30,46 L30,34 A4,4 0 0 1 34,30 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:pathData="M62,30 L74,30 A4,4 0 0 1 78,34 L78,46 A4,4 0 0 1 74,50 L62,50 A4,4 0 0 1 58,46 L58,34 A4,4 0 0 1 62,30 Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:pathData="M34,58 L46,58 A4,4 0 0 1 50,62 L50,74 A4,4 0 0 1 46,78 L34,78 A4,4 0 0 1 30,74 L30,62 A4,4 0 0 1 34,58 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M62,56 L74,56 A6,6 0 0 1 80,62 L80,74 A6,6 0 0 1 74,80 L62,80 A6,6 0 0 1 56,74 L56,62 A6,6 0 0 1 62,56 Z" />
+</vector>
