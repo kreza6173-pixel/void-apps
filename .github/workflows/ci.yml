@@ -1,5 +1,4 @@
-# Copy this file to .github/workflows/ci.yml (the GitHub connector cannot write workflow files).
-# Identical to the PULSE // BATTERY workflow. The signed release step runs only when the
+# Identical to the VOID // APPS  workflow. The signed release step runs only when the
 # PULSE_KEYSTORE_BASE64 secret exists in THIS repository.
 name: CI
 
@@ -104,7 +103,7 @@ jobs:
         if: failure()
         run: |
           {
-            echo "## Cyber App Manager build failed (gradle exit ${{ steps.build.outputs.gradle_exit }})"
+            echo "## VOID // APPS build failed (gradle exit ${{ steps.build.outputs.gradle_exit }})"
             echo
             echo '```'
             tail -n 40 "${RUNNER_TEMP}/build.log"
