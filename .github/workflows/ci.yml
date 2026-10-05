@@ -1,4 +1,3 @@
-# Identical to the VOID // APPS  workflow. The signed release step runs only when the
 # PULSE_KEYSTORE_BASE64 secret exists in THIS repository.
 name: CI
 
